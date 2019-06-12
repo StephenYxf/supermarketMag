@@ -1,0 +1,113 @@
+.main-div {/*最外层div*/
+    text-align: center;
+    width: 100%;
+}
+.userPhoto {/*图片div框*/
+    top: 100px;
+    width: 100px;
+    height: 100px;
+    margin:0px auto;
+    position: relative;
+    border-radius:50%;
+    border: 1px solid #007bff;
+
+}
+
+.photoinfo {/*具体图片*/
+    border-radius:50%;
+    height: 100px;
+    width: 100px;
+    box-shadow: 5px 5px 20px #888888;
+}
+
+.backg {/*背景图片*/
+    z-index:8;
+    /*background-image: url("../img/aaa.png");*/
+    width: 100%;
+    height: 100%;
+    margin:0px auto;
+}
+
+.specialuname {
+    position: absolute;
+    left: 36.5%;
+}
+.textspa {
+    position: absolute;
+    left: 45.5%;
+}
+.userinput {
+    position: relative;
+    left:15px;
+    border-radius:10px;
+    outline:none;
+    padding: 0cm 0.2cm;
+    /*
+        outline （轮廓）是绘制于元素周围的一条线，位于边框边缘的外围，可起到突出元素的作用。
+        outline 简写属性在一个声明中设置所有的轮廓属性。
+        可以按顺序设置如下属性：
+        outline-color
+        outline-style
+        outline-width
+    */
+}
+
+.form-group {
+    position: fixed;
+    top: 70px;
+    margin:0px auto;
+    top: 27%;
+    left: 35%;
+    z-index:100;
+    background-color: #f9f9f9;
+    height: 380px;
+    width: 450px;
+    text-align: center;
+    box-shadow: 5px 5px 10px #888888;
+    border-radius:20px;
+}
+.info {
+    position: relative;
+    top:50px;
+    width:100%;
+}
+.username{/*用户名组件*/
+    position: relative;
+    top:20px;
+}
+.nickname{/*昵称组件*/
+    position: relative;
+    top:30px;
+}
+.gerder{/*性别组件*/
+    position: relative;
+    top:40px;
+}
+.buttonsn {
+    width: 60%;
+    margin:0px auto;
+    position: relative;
+    top: 150px;
+
+}
+.btnrig {
+    position: relative;
+    /*float:left;*/
+}
+.special{/*个性签名组件*/
+    position: relative;
+    top:70px;
+}
+
+.col-sm-9 {
+    position: absolute;
+    /*right: -75px;*/
+    width: 100%;
+    height: 60%;
+    margin: auto;
+}
+
+#ghtx {
+    position: relative;
+    top: 120px;
+}

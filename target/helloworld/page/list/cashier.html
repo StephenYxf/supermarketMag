@@ -1,0 +1,774 @@
+
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0" />
+    <title>收银台</title>
+    <link rel="stylesheet" href="../../css/layui.css" />
+    <link rel="stylesheet" href="../../css/common.css">
+    <link rel="stylesheet" href="../../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../css/jiajian.css">
+    <link rel="stylesheet" href="../../css/tanchu.css"/>
+    <link rel="stylesheet" href="../../css/commoditytanchu.css"/>
+    <script src="../../js/jquery-3.3.1.min.js"></script>
+    <!--<script src="../../js/miniui.js"></script>-->
+    <script src="../../js/layui.js"></script>
+    <script src="../../js/bootstrap.min.js"></script>
+    <script src="../../js/vue.js"></script>
+    <script src="../../js/vue-resource.js"></script>
+
+
+    <script>
+        $(function () {
+            //加载商品查询列表
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/com/infotab" ,//url
+                success: function (result) {
+                    console.log(result);//打印服务端返回的数据(调试用)
+                    if(result.code=="00000"){
+                        var array=result.msg;
+                        for (var i=0;i<array.length;i++){
+                            var picurl = array[i].compicture;
+                            if(picurl!=null){
+                                picurl="http://localhost:8080/"+picurl.substring(6);
+                            }
+//                            $("#comnaselect").append("<option value='/"+array[i].comname+"/'>"+array[i].comname+"</option>");
+                            $(".tab tbody").append('' +
+                                '<tr >\n' +
+                                '   <td style="padding: 15px;">' +
+                                '       <img src="'+picurl+'" width="50px" height="50px">' +
+                                '   </td>\n' +
+                                '   <td>' +
+                                '       <span>商品名称:</span><span>'+array[i].comname+'</span><br>\n' +
+                                '       <span>商品编号:</span><span>'+array[i].comid+'</span>\n' +
+                                '   </td>\n' +
+                                '</tr>');
+                        }
+                    }else{
+                        alert(result.msg)
+                    }
+                },
+                error : function() {
+                    console.log("商品列表查询接口 异常")
+                }
+            })
+
+            //按钮添加
+//            addcom
+            $("#addcom").click(function () {
+                var comidadd = $("#comidadd").val();
+                $.ajax({
+                    //几个参数需要注意一下
+                    type: "GET",//方法类型
+                    dataType: "json",//预期服务器返回的数据类型
+                    url: "/com/idforinfo" ,//url
+                    data: {'comid':comidadd},
+                    success: function (result) {
+                        var comnum,comprice;
+                        //console.log(result);//打印服务端返回的数据(调试用)
+                        if(result.code=='00000'){
+                            if(result.msg.isup=='已下架'){
+                                alert("该商品未上架，无法添加")
+                            }else{
+                                var flag=0;//0不存在 >0存在
+                                $("#providerTable tbody .comid").each(function (index) {
+                                    if($(this).text()==comidadd){
+                                        flag++;
+                                        console.log("index:"+index+",flag:"+flag);
+                                    }
+                                })
+                                console.log("flag:"+flag)
+                                if(flag>=1){
+                                    alert("该商品已经存在，无需重复添加")
+                                }else {
+                                    comnum = result.msg.comnum;
+                                    comprice = result.msg.comprice;
+                                    $("#providerTable tbody").append("" +
+                                        "<tr>\n" +
+                                        "                <td  style=\"vertical-align: middle\" class=\"comid\">"+comidadd+"</td>\n" +
+                                        "                    <td class='comna'  style=\"vertical-align: middle\">"+result.msg.comname+"</td>\n" +
+                                        "                    <td  style=\"vertical-align: middle\" class=\"comprice\">"+comprice+"</td>\n" +
+                                        "                    <td  style=\"vertical-align: middle\">\n" +
+                                        "                    <div>\n" +
+                                        "                       <ul class=\"btn-numbox\" style=\"height: 38px;\">\n" +
+                                        "                    <li>\n" +
+                                        "                    <ul class=\"count\">\n" +
+                                        "                       <li><span class=\"num-jian\">-</span></li>\n" +
+                                        "                       <li><input readonly  type=\"text\" class=\"input-num\" value=\"1\" /></li>\n" +
+                                        "                       <li><span class=\"num-jia\">+</span></li>\n" +
+                                        "<span style=\"color:red;display: none;\" class=\"tips\">"+comnum+"</span>"+
+                                        "<span style=\"color:red;display: none;\" class=\"tips1\">"+comprice+"</span>"+
+                                        "                    </ul>\n" +
+                                        "                    </li>\n" +
+                                        "                       </ul>\n" +
+                                        "                    </div>\n" +
+                                        "                </td>\n" +
+                                        "                <td  style=\"vertical-align: middle\"><li><span class=\"kucun\">（库存:"+comnum+"）</span></li></td>\n" +
+                                        "                <td  style=\"vertical-align: middle\"><a class='del' style='cursor:pointer;text-decoration:none;'>删除</a></td>\n" +
+                                        "                    </tr>")
+//                                    console.log($(".totalMoney").text()+","+$(".totalQuantity").text())
+                                    $(".totalMoney").text(toDecimal2(parseFloat($(".totalMoney").text())+parseFloat(comprice)))
+                                    $(".totalQuantity").text(parseInt($(".totalQuantity").text())+1)
+                                }
+                            }
+                        }
+
+                    },
+                    error : function() {
+                        console.log("接口 异常")
+                    }
+                })
+            })
+
+            //点击添加对应商品
+            $(".tab tbody").on("click","tr",function() {
+                var comna = $(this).find("td").eq(1).find("span").eq(1).text();//1是商品名称 3 是comid
+                var comid = $(this).find("td").eq(1).find("span").eq(3).text();
+                var comnum,comprice;
+                //调用ajax判断一下是否下架
+                $.ajax({
+                    //几个参数需要注意一下
+                    type: "GET",//方法类型
+                    dataType: "json",//预期服务器返回的数据类型
+                    url: "/com/comnaSearch" ,//url
+                    async : false,//同步返回，这样就可以内部变量返回了
+                    data: {'comna':comna},
+                    success: function (result) {
+                        //console.log(result);//打印服务端返回的数据(调试用)
+                        console.log(result.msg);
+                        if(result.code=='00000'){
+                            if(result.msg.isup=='已下架'){
+                                alert("该商品未上架，无法添加")
+                            }else{
+                                var flag=0;//0不存在 >0存在
+                                $("#providerTable tbody .comid").each(function (index) {
+                                    if($(this).text()==comid){
+                                        flag++;
+                                        console.log("index:"+index+",flag:"+flag);
+                                    }
+                                })
+                                console.log("flag:"+flag)
+                                if(flag>=1){
+                                    alert("该商品已经存在，无需重复添加")
+                                }else {
+                                    comnum = result.msg.comnum;
+                                    comprice = result.msg.comprice;
+                                    $("#providerTable tbody").append("" +
+                                        "<tr>\n" +
+                                        "                <td  style=\"vertical-align: middle\" class=\"comid\">"+comid+"</td>\n" +
+                                        "                    <td class='comna'  style=\"vertical-align: middle\">"+comna+"</td>\n" +
+                                        "                    <td  style=\"vertical-align: middle\" class=\"comprice\">"+comprice+"</td>\n" +
+                                        "                    <td  style=\"vertical-align: middle\">\n" +
+                                        "                    <div>\n" +
+                                        "                       <ul class=\"btn-numbox\" style=\"height: 38px;\">\n" +
+                                        "                    <li>\n" +
+                                        "                    <ul class=\"count\">\n" +
+                                        "                       <li><span class=\"num-jian\">-</span></li>\n" +
+                                        "                       <li><input readonly  type=\"text\" class=\"input-num\" value=\"1\" /></li>\n" +
+                                        "                       <li><span class=\"num-jia\">+</span></li>\n" +
+                                        "<span style=\"color:red;display: none;\" class=\"tips\">"+comnum+"</span>"+
+                                        "<span style=\"color:red;display: none;\" class=\"tips1\">"+comprice+"</span>"+
+                                        "                    </ul>\n" +
+                                        "                    </li>\n" +
+                                        "                       </ul>\n" +
+                                        "                    </div>\n" +
+                                        "                </td>\n" +
+                                        "                <td  style=\"vertical-align: middle\"><li><span class=\"kucun\">（库存:"+comnum+"）</span></li></td>\n" +
+                                        "                <td  style=\"vertical-align: middle\"><a class='del' style='cursor:pointer;text-decoration:none;'>删除</a></td>\n" +
+                                        "                    </tr>")
+//                                    console.log($(".totalMoney").text()+","+$(".totalQuantity").text())
+                                    $(".totalMoney").text(toDecimal2(parseFloat($(".totalMoney").text())+parseFloat(comprice)))
+                                    $(".totalQuantity").text(parseInt($(".totalQuantity").text())+1)
+                                }
+                            }
+
+                        }
+                    },
+                    error : function() {
+                        console.log("comnaSearch接口 异常")
+                    }
+                })
+            });
+
+            
+            $("#readcard").click(function () {
+                var phone = $(".phone").val();
+                $.ajax({
+                    //几个参数需要注意一下
+                    type: "GET",//方法类型
+                    dataType: "json",//预期服务器返回的数据类型
+                    url: "/emp/selectPhone" ,//url
+                    data: {'phone':phone},
+                    success: function (result) {
+                        //console.log(result);//打印服务端返回的数据(调试用)
+//                        console.log(result.msg.serviceNumber);
+                        if(result.code=='00000'){
+                            $("#idcard").text(result.msg.serviceNumber);
+                            $("#name").text(result.msg.name);
+                            if(result.msg.type=='1'){
+                                $("#level").text("普通员工");
+                            }else if(result.msg.type=='2'){
+                                $("#level").text("高级员工");
+                            }else if(result.msg.type=='3'){
+                                $("#level").text("店长");
+                            }
+                            $("#havadate").text("永久");
+                            $(".tip111").css('display','none');
+                        }else{
+                            $(".tip111").css('display','block');
+                            $("#havadate").text("");
+                            $("#level").text("");
+                            $("#idcard").text("");
+                            $("#name").text("");
+                        }
+
+                    },
+                    error : function() {
+                        console.log("selectPhone接口 异常")
+                    }
+                })
+            })
+
+            $("#reset").click(function () {
+                $("#providerTable tbody").empty()
+                $(".totalMoney").text("0.00")
+                $(".totalQuantity").text("0")
+            })
+
+
+            //数字加减框
+            $("#providerTable tbody").on("click",".num-jian",function (m) {
+                var obj = $(this).closest("ul").find(".input-num");
+                var comprice = $(this).closest("ul").find(".tips1").html();
+                if (obj.val() <= 1) {
+                    obj.val(1);
+                } else {
+                    obj.val(parseInt(obj.val()) - 1);
+                    $(".totalMoney").text(toDecimal2(parseFloat($(".totalMoney").text())-parseFloat(comprice)))
+                    $(".totalQuantity").text(parseInt($(".totalQuantity").text())-1)
+                }
+                obj.change();
+            });
+            $("#providerTable tbody").on("click",".num-jia",function (m) {
+                var obj = $(this).closest("ul").find(".input-num");
+                var num = $(this).closest("ul").find(".tips").html();//获取
+                var comprice = $(this).closest("ul").find(".tips1").html();
+//                console.log("num:"+num+",obj:"+obj.val()+"obj<num:"+(obj.val()<num))
+                if(obj.val()<parseInt(num)){
+                    obj.val(parseInt(obj.val()) + 1);
+                    obj.change();
+                    $(".totalMoney").text(toDecimal2(parseFloat($(".totalMoney").text())+parseFloat(comprice)))
+                    $(".totalQuantity").text(parseInt($(".totalQuantity").text())+1)
+                }
+            });
+
+
+            $("#settlement").click(function () {
+                var check=$("#name").text();
+                var hanghao=$("#providerTable").find("tr").length-1;//获取行数 为零则无法结算
+                console.log(hanghao+":hanghao")
+                if(hanghao>0){//添加过商品才能打开
+                    openDialog();
+                    //打开同时调个接口生成一下订单 id   应收金额也赋值   实收0.00   找零0.00
+                    var ddid;
+                    $.ajax({
+                        //几个参数需要注意一下
+                        type: "GET",//方法类型
+                        dataType: "json",//预期服务器返回的数据类型
+                        async : false,//同步返回，这样就可以内部变量返回了
+                        url: "/com/getddID" ,//url
+                        success: function (result) {
+                            //console.log(result);//打印服务端返回的数据(调试用)
+                            console.log(result.msg);
+                            ddid=result.msg;
+                        },
+                        error : function() {
+                            console.log("获取订单id接口 异常")
+                        }
+                    })
+                    $("#ddbh").val(ddid);
+                    if(check!=""){
+                        $("#ysje").val(toDecimal2(parseFloat($(".totalMoney").text())*0.9));
+                    }else if(check==""){
+                        $("#ysje").val($(".totalMoney").text());
+                    }
+
+                    $("#ssje").val("0.00");
+                    $("#zl").val("0.00")
+                }else {
+                    alert("请先添加商品，再进行结算")
+                }
+
+            })
+
+            //删除当前行
+            $("#providerTable tbody").on("click",".del",function (m) {
+                var num = $(this).parent().parent().find(".input-num").val();
+                var price = $(this).parent().parent().find(".comprice").text();
+                var all = toDecimal2(parseFloat(num)*parseFloat(price));
+                console.log("num:"+num+",price:"+price+",all:"+all);
+                $(".totalMoney").text(toDecimal2(parseFloat($(".totalMoney").text())-all));
+                $(".totalQuantity").text(parseInt($(".totalQuantity").text())-parseInt(num));
+                $(this).parent().parent().remove();
+//                var comprice = $(this).closest("ul").find(".tips1").html();
+//                if (obj.val() <= 1) {
+//                    obj.val(1);
+//                } else {
+//                    obj.val(parseInt(obj.val()) - 1);
+//                    $(".totalMoney").text(toDecimal2(parseFloat($(".totalMoney").text())-parseFloat(comprice)))
+//                    $(".totalQuantity").text(parseInt($(".totalQuantity").text())-1)
+//                }
+//                obj.change();
+            });
+
+
+            $("#ssje").keyup(function () {
+                var reg = $(this).val().match(/\d+\.?\d{0,2}/);
+                var txt = '';
+                if (reg != null) {
+                    txt = reg[0];
+                }
+                $(this).val(txt);
+                if(parseFloat($(this).val())>parseFloat($("#ysje").val())){
+                    var zlprice = toDecimal2(parseFloat($(this).val())-parseFloat($("#ysje").val()));
+                    $("#zl").val(zlprice)
+                }else{
+                    $("#zl").val("0.00")
+                }
+             }).change(function () {
+                $(this).keypress();
+                var v = $(this).val();
+                if (/\.$/.test(v)){
+                    $(this).val(v.substr(0, v.length - 1));
+                }
+             });
+
+//            //键入的数字框实现最大值限制和纯数字
+//            $("#providerTable tbody").on("keyup",".input-num",function () {
+//                $(this).val($(this).val().replace(/^(0+)|[^\d]+/g,''));
+//                var num = $(this).closest("ul").find(".tips").html();//获取
+//                var obj = $(this).val()//当前输入数字
+//                var comprice = $(this).closest("ul").find(".tips1").html();
+//                var yuanMoney =  $(".totalMoney").text();
+//                var yuanNum = $(".totalQuantity").text();
+//                $(".totalMoney").text(toDecimal2(parseFloat($(".totalMoney").text())+parseFloat(obj)*parseFloat(comprice)))
+//                $(".totalQuantity").text(parseInt($(".totalQuantity").text())+parseInt(obj))
+//                if(parseInt(obj)>=parseInt(num)){
+//                    $(this).val(num);
+//                }
+//
+////                if(parseInt(obj))
+////                console.log(obj)
+//            })
+
+
+        })
+        //查询按钮
+        function search() {
+//            var comna =$("#key").val();
+//            console.log("comna:"+comna)
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/com/infolistname" ,//url
+                data:{'comna':$("#key").val()},
+                success: function (result) {
+                    console.log(result);//打印服务端返回的数据(调试用)
+                    $(".tab  tr").empty("");//清空table内容
+
+                    if(result.code=="00000"){
+                        var array=result.msg;
+                        for (var i=0;i<array.length;i++){
+                            var picurl = array[i].compicture;
+                            if(picurl!=null){
+                                picurl="http://localhost:8080/"+picurl.substring(6);
+                            }
+//                            $("#comnaselect").append("<option value='/"+array[i].comname+"/'>"+array[i].comname+"</option>");
+                            $(".tab tbody").append('' +
+                                '<tr onClick="tr_click(this)">\n' +
+                                '   <td style="padding: 15px;">' +
+                                '       <img src="'+picurl+'" width="50px" height="50px">' +
+                                '   </td>\n' +
+                                '   <td>' +
+                                '       <span>商品名称:</span><span>'+array[i].comname+'</span><br>\n' +
+                                '       <span>商品编号:</span><span>'+array[i].comid+'</span>\n' +
+                                '   </td>\n' +
+                                '</tr>');
+                        }
+                    }else{
+                        alert(result.msg)
+                    }
+                },
+                error : function() {
+                    console.log("商品列表查询接口 异常")
+                }
+            })
+        }
+
+
+        //        function tr_click(e) {
+        //            var text = $(this).find("td:eq(0)").val();
+        //            var text1 = $(e).closest("tr").find("td").eq(0).val()
+        //            var text2 = $(this).find("td").eq(1).text();
+        //            alert("1123:"+text);
+        //        }
+        //强制保留2位小数，如：2，会在2后面补上00.即2.00
+        function toDecimal2(x) {
+            var f = parseFloat(x);
+            if (isNaN(f)) {
+                return "0.00";
+            }
+            var f = Math.round(x*100)/100;
+            var s = f.toString();
+            var rs = s.indexOf('.');
+            if (rs < 0) {
+                rs = s.length;
+                s += '.';
+            }
+            while (s.length <= rs + 2) {
+                s += '0';
+            }
+            return s;
+        }
+        function openDialog(){
+            document.getElementById('light').style.display='block';
+            document.getElementById('fade').style.display='block'
+        }
+
+
+        function closeDialog(){
+            document.getElementById('light').style.display='none';
+            document.getElementById('fade').style.display='none'
+        }
+
+        function subBtn() {//提交订单后要把商品信息什么的都传过去  还需要减少库存
+            var allinfo="";
+            var comidArray=new Array()
+            var comnumArray=new Array()
+            $("#providerTable tbody").find("tr").each(function (index) {
+                var comid = $(this).find('.comid').text();//商品id
+                var comna = $(this).find('.comna').text();//商品名称
+                var comprice = $(this).find('.comprice').text();//商品价格
+                var num = $(this).find('.input-num').val();//商品售出数量
+                var tips = $(this).find('.tips').text();//库存
+                comidArray[index]=comid;
+                comnumArray[index]=num;
+                console.log("comidArray:"+comidArray+",comnumArray:"+comnumArray)
+                allprice =toDecimal2(allprice+parseFloat(comprice));
+                //以上数据都成功获取   会循环好几次，把数据通过分号串联起来
+                allinfo = allinfo+"商品ID:"+comid+",商品名称:"+comna+",商品单价:"+comprice+",数量:"+num+";"
+//                console.log("comid:"+comid+",comna:"+comna+",comprice:"+comprice+",num:"+num+",tips:"+tips)
+            })
+            var allprice = $("#ysje").val();
+            var orderid = $("#ddbh").val();
+            console.log("allinfo:"+allinfo+",,,,,,,,allprice:"+allprice+",orderid:"+orderid)
+            if(parseFloat($("#ssje").val())-parseFloat($("#ysje").val())>=0){//付钱了才能结算
+                $.ajax({
+                    //几个参数需要注意一下
+                    type: "GET",//方法类型
+                    async: false,
+                    dataType: "json",//预期服务器返回的数据类型
+                    data:{'orderid':orderid,'details':allinfo,'money':allprice},
+                    url: "/order/insert" ,//url
+                    success: function (result) {
+                        console.log(result);//打印服务端返回的数据(调试用)
+                        if(result.code=="00000"){
+                            console.log("插入数据成功");
+                            //插入成功后减少库存
+                            $.ajax({
+                                //几个参数需要注意一下
+                                type: "GET",//方法类型
+                                async: false,
+                                dataType: "json",//预期服务器返回的数据类型
+                                data:{'comidArray':comidArray,'comnumArray':comnumArray},
+                                traditional: true,//这里设置为true  传递数组会变成 comidArray[]传递，设置这个之后就变成comidArray名字
+                                url: "/com/numjian" ,//url
+                                success: function (result) {
+                                    console.log(result);//打印服务端返回的数据(调试用)
+                                    if(result.code=='00000'){
+                                        window.location.href='order.html';
+                                    }
+                                },
+                                error : function() {
+                                    console.log("库存定量减少接口 异常")
+                                }
+                            })
+
+                        }else{
+                            console.log("插入数据失败");
+                        }
+                    },
+                    error : function() {
+                        console.log("销售订单插入接口 异常")
+                    }
+                })
+            }else{
+                alert("请先输入实收金额")
+            }
+
+
+        }
+
+    </script>
+
+</head>
+<body style="background: #F6F7F9;">
+<!--弹出框  修改商品信息界面-->
+<div id="light" class="white_content">
+    <div class="main-div">
+        <div class="backg">
+            <div class="info">
+                <div class="username"><!--订单编号-->
+                    <span class="glyphicon glyphicon-user"></span> 订&nbsp;&nbsp;单&nbsp;&nbsp;编&nbsp;&nbsp;号:
+                    <input id="ddbh" class="userinput" disabled="disabled" type="text" placeholder=""><br>
+                </div>
+                <div class="username"><!--应收金额-->
+                    <span class="glyphicon glyphicon-edit"></span> 应&nbsp;&nbsp;收&nbsp;&nbsp;金&nbsp;&nbsp;额:
+                    <input id="ysje" class="userinput" disabled="disabled" type="text" placeholder=""><br>
+                </div>
+                <div class="username"><!--实收金额-->
+                    <span class="glyphicon glyphicon-edit"></span> 实&nbsp;&nbsp;收&nbsp;&nbsp;金&nbsp;&nbsp;额:
+                    <input id="ssje" maxlength="10" class="userinput" type="text" placeholder="请输入价格"><br>
+                </div>
+                <div class="username"><!--找零-->
+                    <span class="glyphicon glyphicon-edit"></span> 找&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;零:
+                    <input id="zl" class="userinput" disabled="disabled" type="text" placeholder=""><br>
+
+                </div>
+            </div>
+            <div class="buttonsn">
+                <div class="btnrig">
+                    <button class="btn btn-primary" onclick = "subBtn()">提交</button>
+                    <button class="btn btn-primary" onclick = "closeDialog()">取消</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+<!--遮罩层-->
+<div id="fade" class="black_overlay"></div>
+
+<div class="main">
+    <div class="layui-row">
+        <div class="main_left layui-col-xs12 layui-col-md3">
+            <div class="layui-row">
+                <div class="top">
+                    <i class="glyphicon glyphicon-tasks"></i>商品列表
+                </div>
+                <div class="left_main">
+                    <input id="key"  placeholder="请输入商品名称" onenter="onKeyEnter"/><!--class="mini-textbox"-->
+                    <!--<a class="mini-button" onclick="search()">查询</a>-->
+                    <button id="searchBtn" type="button" class="btn btn-success" onclick="search()">查询</button>
+                    <!--这个url   url="data/tree.json"-->
+                    <!--<ul id="tree1" class="mini-tree"  showTreeIcon="true" textField="name" idField="id" expandOnLoad="true" onNodeClick="onNodeClick">-->
+                    <!--</ul>-->
+                </div>
+                <div id="comlist">
+                    <table style="width: 100%;cursor:pointer;" class="tab">
+                        <tbody>
+                            <!--<tr onClick="tr_click()">-->
+                                <!--<td style="padding: 15px;"><img src="../../img/1.png" width="50px" height="50px"></td>-->
+                                <!--<td>-->
+                                    <!--<span>商品名称:</span><span>1111111</span>-->
+                                    <!--<br>-->
+                                    <!--<span>商品编号:</span><span>22212312315121231</span>-->
+                                <!--</td>-->
+                            <!--</tr>-->
+                            <!--<tr onClick="tr_click()">-->
+                                <!--<td style="padding: 15px;"><img src="../../img/1.png" width="50px" height="50px"></td>-->
+                                <!--<td>-->
+                                    <!--<span>商品名称:</span><span>123</span>-->
+                                    <!--<br>-->
+                                    <!--<span>商品编号:</span><span>5555555555555555</span>-->
+                                <!--</td>-->
+                            <!--</tr>-->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="main_right layui-col-xs12 layui-col-md9">
+            <div class="layui-row">
+                <div class="top">
+                    <label>商品编码：</label>
+                    <div class="layui-input-inline">
+                        <input id="comidadd" type="text" name="title" required lay-verify="required" placeholder="扫码或手动输入商品编码" autocomplete="off" class="layui-input">
+                    </div>
+                    <div class="layui-input-inline">
+                        <button id="addcom" class="layui-btn layui-btn-primary" style="vertical-align: middle;margin-bottom: 2px;">添加</button>
+                    </div>
+                </div>
+                <div class="goods_list">
+                    <table id="providerTable" class="table table-bordered" style="text-align:center">
+                        <thead>
+                        <tr class="firstTr" >
+                            <th width="10%" style="text-align:center">商品ID</th>
+                            <th width="15%" style="text-align:center">商品名称</th>
+                            <th width="10%" style="text-align:center">零售价(元)</th>
+                            <th width="30%" style="text-align:center">数量</th>
+                            <th width="15%" style="text-align:center">备注</th>
+                            <th width="5%" style="text-align:center">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <!--<tr>-->
+                                <!--<td  style="vertical-align: middle" class="comid">15498703383955183</td>-->
+                                <!--<td  style="vertical-align: middle">人人车</td>-->
+                                <!--<td  style="vertical-align: middle">58.4</td>-->
+                                <!--<td  style="vertical-align: middle">-->
+                                    <!--<div>-->
+
+                                        <!--&lt;!&ndash;<input style="width: 50px; height: 38px; border: 2px white; float: left;" type="button" value="-" onclick="reductionOf(this)" />&ndash;&gt;-->
+
+                                        <!--&lt;!&ndash;<input style="text-align: center; width: 50px; height: 32px; float: left;" type="text" value="1" onblur="checkNumber(this)" />&ndash;&gt;-->
+
+                                        <!--&lt;!&ndash;<input style="width: 50px; height: 38px; border: 2px white;" type="button" value="+" onclick="add(this)" />&ndash;&gt;-->
+                                        <!--<ul class="btn-numbox" style="height: 38px;">-->
+                                            <!--<li>-->
+                                                <!--<ul class="count">-->
+                                                    <!--<li><span class="num-jian">-</span></li>-->
+                                                    <!--<li><input type="text" class="input-num" value="0" /></li>-->
+                                                    <!--<li><span class="num-jia">+</span></li>-->
+                                                <!--</ul>-->
+                                            <!--</li>-->
+                                        <!--</ul>-->
+                                    <!--</div>-->
+                                <!--</td>-->
+                                <!--<td  style="vertical-align: middle"><li><span class="kucun">（库存:）</span></li></td>-->
+                                <!--<td  style="vertical-align: middle">删除</td>-->
+                            <!--</tr>-->
+                            <!--<tr>-->
+                                <!--<td  class="comid">15498709245717905</td>-->
+                                <!--<td>1寸</td>-->
+                                <!--<td>50.00</td>-->
+                                <!--<td>-->
+                                    <!--<div>-->
+                                        <!--<ul class="btn-numbox" style="height: 38px;">-->
+                                            <!--<li>-->
+                                                <!--<ul class="count">-->
+                                                    <!--<li><span class="num-jian">-</span></li>-->
+                                                    <!--<li><input type="text" class="input-num" value="0" /></li>-->
+                                                    <!--<li><span class="num-jia">+</span></li>-->
+                                                <!--</ul>-->
+                                            <!--</li>-->
+                                        <!--</ul>-->
+                                    <!--</div>-->
+                                <!--</td>-->
+                                <!--<td><li><span class="kucun">（库存:）</span></li></td>-->
+                                <!--<td>删除</td>-->
+                            <!--</tr>-->
+                            <!--<tr>-->
+                                <!--<td  class="comid">15498727805480977</td>-->
+                                <!--<td>机器人1</td>-->
+                                <!--<td>11</td>-->
+                                <!--<td>-->
+                                    <!--<div>-->
+                                        <!--<ul class="btn-numbox" style="height: 38px;">-->
+                                            <!--<li>-->
+                                                <!--<ul class="count">-->
+                                                    <!--<li><span class="num-jian">-</span></li>-->
+                                                    <!--<li><input type="text" class="input-num" value="0" /></li>-->
+                                                    <!--<li><span class="num-jia">+</span></li>-->
+                                                <!--</ul>-->
+                                            <!--</li>-->
+                                        <!--</ul>-->
+                                    <!--</div>-->
+                                <!--</td>-->
+                                <!--<td><li><span class="kucun">（库存:）</span></li></td>-->
+                                <!--<td>删除</td>-->
+                            <!--</tr>-->
+                            <!--<tr>-->
+                                <!--<td>2019001</td>-->
+                                <!--<td>机器人</td>-->
+                                <!--<td>153</td>-->
+                                <!--<td>-->
+                                    <!--<div>-->
+                                        <!--<ul class="btn-numbox" style="height: 38px;">-->
+                                            <!--<li>-->
+                                                <!--<ul class="count">-->
+                                                    <!--<li><span class="num-jian">-</span></li>-->
+                                                    <!--<li><input type="text" class="input-num" value="0" /></li>-->
+                                                    <!--<li><span class="num-jia">+</span></li>-->
+                                                <!--</ul>-->
+                                            <!--</li>-->
+                                        <!--</ul>-->
+                                    <!--</div>-->
+                                <!--</td>-->
+                                <!--<td><li><span class="kucun">（库存:）</span></li></td>-->
+                                <!--<td>删除</td>-->
+                            <!--</tr>-->
+                        </tbody>
+                    </table>
+                    <!--<table class="layui-table">-->
+                    <!--<thead>-->
+                    <!--<tr>-->
+                    <!--<th lay-data="{field:'id'}">商品编码</th>-->
+                    <!--<th lay-data="{field:'name'}">商品名称</th>-->
+                    <!--<th lay-data="{field:'price', edit: 'text'}">零售价（元）</th>-->
+                    <!--<th lay-data="{field:'number', edit: 'text'}">数量</th>-->
+                    <!--<th lay-data="{field:'integral'}">积分</th>-->
+                    <!--&lt;!&ndash;<th lay-data="{field:'staff', edit: 'text'}">提成员工</th>&ndash;&gt;-->
+                    <!--<th lay-data="{field:'remarks', edit: 'text'}">备注</th>-->
+                    <!--<th lay-data="{field:'operation'}">操作</th>-->
+                    <!--</tr>-->
+                    <!--</thead>-->
+                    <!--<tbody id="myTbody">-->
+
+                    <!--</tbody>-->
+                    </table>
+                </div>
+                <div class="total ft16">
+                    合计：【<span> 消费总金额：<i class="totalMoney">0.00</i> </span>】【<span> 消费总数量：<i class="totalQuantity">0</i> </span>】
+                </div>
+                <table class="reading layui-table" lay-even="">
+                    <tbody>
+                    <tr>
+                        <td>会员查找</td>
+                        <td colspan="3">
+                            <div class="layui-input-inline">
+                                <input class="phone" type="text" oninput = "value=value.replace(/[^\d]/g,'')" maxlength="11" class="layui-input" placeholder="扫描或者手动输入会员卡号" />
+                            </div>
+                            <button id="readcard" class="card_reading layui-btn">读卡</button>
+                            <span style="color:red;display: none;" class="tip111">卡号错误，请确认</span>
+                            <!--<a href="#" class="registration layui-btn layui-btn-primary">会员登记</a>-->
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>会员卡号：</td>
+                        <td id="idcard"></td>
+                        <td>会员姓名：</td>
+                        <td id="name"></td>
+                    </tr>
+                    <tr>
+                        <td>会员级别：</td>
+                        <td id="level"></td>
+                        <td>有效期：</td>
+                        <td id="havadate"></td>
+                    </tr>
+                    <!--<tr>-->
+                    <!--<td>可用积分：</td>-->
+                    <!--<td></td>-->
+                    <!--<td>可用储值：</td>-->
+                    <!--<td></td>-->
+                    <!--</tr>-->
+                    <!--</tbody>-->
+                </table>
+                <div class="towbtn">
+                    <input type="submit" id="settlement" value="结算">
+                    <input id="reset" type="reset" value="清空" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</body>
+</html>

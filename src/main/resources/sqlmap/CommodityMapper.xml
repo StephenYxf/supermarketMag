@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yxf.dao.CommodityMapper" >
+  <resultMap id="BaseResultMap" type="com.yxf.model.Commodity" >
+    <id column="comid" property="comid" jdbcType="VARCHAR" />
+    <result column="comname" property="comname" jdbcType="VARCHAR" />
+    <result column="comprice" property="comprice" jdbcType="REAL" />
+    <result column="comnum" property="comnum" jdbcType="INTEGER" />
+    <result column="compicture" property="compicture" jdbcType="VARCHAR" />
+    <result column="isup" property="isup" jdbcType="VARCHAR" />
+
+  </resultMap>
+  <sql id="Base_Column_List">
+    comid, comname, comprice, comnum, compicture, isup
+  </sql>
+
+  <select id="selectComInfo" resultType="com.yxf.model.Commodity">
+    SELECT *
+    FROM commodity
+  </select>
+
+  <select id="selectComInfoNum" resultType="com.yxf.model.Commodity">
+    SELECT *
+    FROM commodity LIMIT #{0},#{1}
+  </select>
+
+  <select id="serachComForComname" resultType="com.yxf.model.Commodity">
+    SELECT *
+    FROM commodity WHERE comname LIKE "%"#{0}"%"
+  </select>
+
+  <select id="selectComAllForname" resultType="com.yxf.model.Commodity">
+    SELECT *
+    FROM commodity WHERE comname =#{0}
+  </select>
+
+
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String">
+    select 
+    <include refid="Base_Column_List" />
+    from commodity
+    where comid = #{comid,jdbcType=VARCHAR}
+  </select>
+
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from commodity
+    where comid = #{comid,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.yxf.model.Commodity" >
+    insert into commodity (comid, comname, comprice, 
+      comnum, compicture, isup)
+    values (#{comid,jdbcType=VARCHAR}, #{comname,jdbcType=VARCHAR}, #{comprice,jdbcType=REAL}, 
+      #{comnum,jdbcType=INTEGER}, #{compicture,jdbcType=VARCHAR}, #{isup,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.yxf.model.Commodity" >
+    insert into commodity
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="comid != null" >
+        comid,
+      </if>
+      <if test="comname != null" >
+        comname,
+      </if>
+      <if test="comprice != null" >
+        comprice,
+      </if>
+      <if test="comnum != null" >
+        comnum,
+      </if>
+      <if test="compicture != null" >
+        compicture,
+      </if>
+      <if test="isup != null" >
+        isup,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="comid != null" >
+        #{comid,jdbcType=VARCHAR},
+      </if>
+      <if test="comname != null" >
+        #{comname,jdbcType=VARCHAR},
+      </if>
+      <if test="comprice != null" >
+        #{comprice,jdbcType=REAL},
+      </if>
+      <if test="comnum != null" >
+        #{comnum,jdbcType=INTEGER},
+      </if>
+      <if test="compicture != null" >
+        #{compicture,jdbcType=VARCHAR},
+      </if>
+      <if test="isup != null" >
+        #{isup,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.yxf.model.Commodity" >
+    update commodity
+    <set >
+      <if test="comname != null" >
+        comname = #{comname,jdbcType=VARCHAR},
+      </if>
+      <if test="comprice != null" >
+        comprice = #{comprice,jdbcType=REAL},
+      </if>
+      <if test="comnum != null" >
+        comnum = #{comnum,jdbcType=INTEGER},
+      </if>
+      <if test="compicture != null" >
+        compicture = #{compicture,jdbcType=VARCHAR},
+      </if>
+      <if test="isup != null" >
+        isup = #{isup,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where comid = #{comid,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.yxf.model.Commodity" >
+    update commodity
+    set comname = #{comname,jdbcType=VARCHAR},
+      comprice = #{comprice,jdbcType=REAL},
+      comnum = #{comnum,jdbcType=INTEGER},
+      compicture = #{compicture,jdbcType=VARCHAR},
+      isup = #{isup,jdbcType=VARCHAR}
+    where comid = #{comid,jdbcType=VARCHAR}
+  </update>
+
+  <update id="updateByNum" parameterType="com.yxf.model.Commodity" >
+    update commodity
+    set <![CDATA[ comnum = comnum-#{comnum,jdbcType=INTEGER} ]]>
+    where comid = #{comid,jdbcType=VARCHAR}
+  </update>
+</mapper>

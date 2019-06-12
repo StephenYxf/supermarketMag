@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yxf.dao.OrderMapper" >
+  <resultMap id="BaseResultMap" type="com.yxf.model.Order" >
+    <id column="orderid" property="orderid" jdbcType="VARCHAR" />
+    <result column="details" property="details" jdbcType="VARCHAR" />
+    <result column="time" property="time" jdbcType="TIMESTAMP" />
+    <result column="money" property="money" jdbcType="REAL" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    orderid, details, time, money
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from `order`
+    where orderid = #{orderid,jdbcType=VARCHAR}
+  </select>
+
+  <select id="selectorder" resultType="com.yxf.model.Order">
+    SELECT *
+    FROM `order`
+  </select>
+
+  <select id="selectorderTime" resultType="com.yxf.model.Order">
+    SELECT *
+    FROM `order`
+    WHERE <![CDATA[ time >= #{startdate,jdbcType=TIMESTAMP} and time <= #{enddate,jdbcType=TIMESTAMP} ]]>
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from `order`
+    where orderid = #{orderid,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.yxf.model.Order" >
+    insert into `order` (orderid, details, time,
+      money)
+    values (#{orderid,jdbcType=VARCHAR}, #{details,jdbcType=VARCHAR}, #{time,jdbcType=TIMESTAMP}, 
+      #{money,jdbcType=REAL})
+  </insert>
+  <insert id="insertSelective" parameterType="com.yxf.model.Order" >
+    insert into `order`
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="orderid != null" >
+        orderid,
+      </if>
+      <if test="details != null" >
+        details,
+      </if>
+      <if test="time != null" >
+        time,
+      </if>
+      <if test="money != null" >
+        money,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="orderid != null" >
+        #{orderid,jdbcType=VARCHAR},
+      </if>
+      <if test="details != null" >
+        #{details,jdbcType=VARCHAR},
+      </if>
+      <if test="time != null" >
+        #{time,jdbcType=TIMESTAMP},
+      </if>
+      <if test="money != null" >
+        #{money,jdbcType=REAL},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.yxf.model.Order" >
+    update `order`
+    <set >
+      <if test="details != null" >
+        details = #{details,jdbcType=VARCHAR},
+      </if>
+      <if test="time != null" >
+        time = #{time,jdbcType=TIMESTAMP},
+      </if>
+      <if test="money != null" >
+        money = #{money,jdbcType=REAL},
+      </if>
+    </set>
+    where orderid = #{orderid,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.yxf.model.Order" >
+    update `order`
+    set details = #{details,jdbcType=VARCHAR},
+      time = #{time,jdbcType=TIMESTAMP},
+      money = #{money,jdbcType=REAL}
+    where orderid = #{orderid,jdbcType=VARCHAR}
+  </update>
+</mapper>

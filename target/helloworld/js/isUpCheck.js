@@ -1,0 +1,3 @@
+function isUpCheck(comid,isupCheck) {
+
+}

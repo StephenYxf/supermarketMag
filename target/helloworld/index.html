@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>首页</title>
+    <link rel="stylesheet" href="css/index.css" />
+    <script type="text/javascript" src="js/jquery-3.3.1.min.js" ></script>
+    <script type="text/javascript" src="./js/getUrlParam.js"></script>
+    <!--<script type="text/javascript" src="../js/index.js" ></script>-->
+    <script type="text/javascript">
+        function jump(url) {
+            $("#content").load(url, function () {
+                    $("#content").fadeIn(100);
+                }
+            );
+        }
+            function pageClick(k,url) {
+//            $(k).parent().find("div").removeClass("active");
+//            $(k).addClass("active");
+//            $(".leftTiyle").text($(k).text());
+//            jump(url);
+
+                $(location).attr('href', url+"?uname="+UrlParam.paramValues("uname"));
+        }
+
+        $(function () {
+            var loginName
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/emp/showName" ,//url
+//                data: {'uname':uname,'pwd':pwd,'email':email},
+                success: function (result) {
+                    //console.log(result);//打印服务端返回的数据(调试用)
+                    console.log(result.msg)
+                    if(result.msg=="99999"){//空的
+                        console.log("没有session内容uname")
+                    }
+                    loginName=result.msg;
+                    $(".thisUser").html("当前用户："+result.msg+"&nbsp;&nbsp;&nbsp;<a class='breakuser' href='../../login.html'>退出</a>");
+                },
+                error : function() {
+                    console.log("用户名获取接口 异常")
+                }
+            })
+//            var loginName = UrlParam.paramValues("uname");//获取网址上的uname
+
+
+            //页面跳转session检测
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/page/reload" ,//url
+//                data: {'uname':uname,'pwd':pwd,'email':email},
+                success: function (result) {
+                    //console.log(result);//打印服务端返回的数据(调试用)
+                    console.log(result.isEmp)
+                    if(result.isEmp=="true"){//空的
+                        console.log("判断没有session")
+                        window.location.href="../../../login.html";
+                    }
+                },
+                error : function() {
+                    console.log("页面跳转接口 异常")
+                }
+            })
+
+            $(".thisUser").on('click','.breakuser',function(){
+                $.ajax({
+                    //几个参数需要注意一下
+                    type: "GET",//方法类型
+                    dataType: "json",//预期服务器返回的数据类型
+                    url: "/emp/delSession" ,//url
+//                data: {'uname':uname,'pwd':pwd,'email':email},
+                    success: function (result) {
+                        //console.log(result);//打印服务端返回的数据(调试用)
+                        console.log(result.msg);
+                        window.location.href="../../../login.html"
+                    },
+                    error : function() {
+                        console.log("session删除 退出接口 异常")
+                    }
+                })
+            });
+
+        })
+
+    </script>
+</head>
+
+<body>
+<div class="left">
+    <div class="bigTitle">超市管理系统</div>
+    <div class="lines" >
+        <!-- class="active"  表示选中的列表项-->
+        <div onclick="pageClick(this,'page/emp/empInfo.html')" title="empInfo.html"><img src="img/icon-1.png" />员工管理</div>
+        <div onclick="pageClick(this,'page/com/commodity.html')" title="commodity.html"><img src="img/icon-2.png" />商品信息管理</div>
+        <div onclick="pageClick(this,'page/com/comInventory.html')" title="comInventory.html"><img src="img/icon-3.png" />商品库存管理</div>
+        <div onclick="pageClick(this,'page/list/purchase.html')" title="purchase.html"><img src="img/icon-4.png" />进货订单管理</div>
+        <div onclick="pageClick(this,'page/com/comStockPurchase.html')" title="comStockPurchase.html"><img src="img/icon-5.png" />进货渠道管理</div>
+        <div onclick="pageClick(this,'page/list/order.html')" title="order.html"><img src="img/icon-5.png" />销售订单管理</div>
+        <div onclick="pageClick(this,'page/list/cashier.html')" title="cashier.html"><img src="img/icon-5.png" />收银台</div>
+    </div>
+</div>
+<div class="top" >
+    <div class="leftTiyle" id="flTitle">管理</div>
+    <div class="thisUser">当前用户：XXXXX</div>
+</div>
+<div id="content" >
+    <!--初始页面  进入显示欢迎 到时候放图片或者别的什么最后再说-->
+    <h3 style="text-align: center">welcome</h3>
+</div>
+</body>
+</html>

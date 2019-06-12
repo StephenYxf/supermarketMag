@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>员工信息修改页面</title>
+    <link rel="stylesheet" href="../../css/index.css" />
+    <link rel="stylesheet" href="../../css/public.css"/>
+    <link rel="stylesheet" href="../../css/style.css"/>
+    <script type="text/javascript" src="../../js/jquery-3.3.1.min.js" ></script>
+    <link rel="stylesheet" href="../../css/bootstrap.min.css">
+    <script type="text/javascript" src="../../js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../js/getUrlParam.js"></script>
+    <script type="text/javascript" src="../../js/format.js"></script>
+    <!--<script type="text/javascript" src="../js/index.js" ></script>-->
+    <script type="text/javascript">
+//        function jump(url) {
+//            $("#content").load(url, function () {
+//                    $("#content").fadeIn(100);
+//                }
+//            );
+//        }
+        function pageClick(k,url) {
+//            $(k).parent().find("div").removeClass("active");
+//            $(k).addClass("active");
+//            $(".leftTiyle").text($(k).text());
+//            jump(url);
+            $(location).attr('href', url);
+        }
+        function backclick() {
+            history.go(-1);
+        }
+
+
+    $(function () {
+        $.ajax({
+            //几个参数需要注意一下
+            type: "GET",//方法类型
+            dataType: "json",//预期服务器返回的数据类型
+            url: "/emp/showName" ,//url
+//                data: {'uname':uname,'pwd':pwd,'email':email},
+            success: function (result) {
+                //console.log(result);//打印服务端返回的数据(调试用)
+                console.log(result.msg)
+                if(result.code=="99999"){//空的
+                    console.log("没有session内容uname")
+                }
+                loginName=result.msg;
+                $(".thisUser").html("当前用户："+result.msg+"&nbsp;&nbsp;&nbsp;<a class='breakuser' href='../../login.html'>退出</a>");
+            },
+            error : function() {
+                console.log("用户名获取接口 异常")
+            }
+        })
+
+        var empid = UrlParam.paramValues("empid");
+        console.log(empid.toString())
+        $.ajax({
+            //几个参数需要注意一下
+            type: "GET",//方法类型
+            dataType: "json",//预期服务器返回的数据类型
+            url: "/emp/idSerach" ,//url
+            data: {'empid':empid.toString()},
+            success: function (result) {
+                console.log(result);//打印服务端返回的数据(调试用)
+                console.log(result.msg.name+","+result.msg.sex+","+result.msg.uname+","+result.msg.birthday+","+result.msg.serviceNumber+","+result.msg.address)
+                $("#username").val(result.msg.name);
+                console.log("sexxxxxx:"+result.msg.sex)
+                if(result.msg.sex=="男"){
+                    console.log("男")
+                    $("#sex").val("男");   // 设置Select的Value值为4的项选中
+                }else if(result.msg.sex=="女"){
+                    console.log("女")
+                    $("#sex").val("女");   // 设置Select的Value值为4的项选中
+                }
+                var da=result.msg.birthday
+                $("#nickname").val(result.msg.uname);
+                $("#password").val(result.msg.password);
+                $("#birthday").val(timeStamp2String(da));
+                $("#phoneNum").val(result.msg.serviceNumber);
+                $("#address").val(result.msg.address);
+            },
+            error : function() {
+                console.log("idSerach接口 异常")
+            }
+        })
+
+
+
+        var yanzhengma;
+        var sendEmail=document.getElementById("sendEmailBtn");
+        var flag1=1,flag2=1,flag3=1,flag4=1;
+
+
+        //默认确认密码隐藏
+        $('#pwdCheckSH').hide();
+        //单击可修改密码
+        $('#updatePwd').click(function () {
+            var text =$('#updatePwd').text();
+            console.log(text)
+            if(text=="更改密码"){
+                $('#updatePwd').text("取消修改");
+                $('#pwdCheckSH').show();
+                $('#password').removeAttr('readonly')
+                $("#passwordConfirm").val("")
+            }else{
+                $('#updatePwd').text("更改密码");
+                $('#pwdCheckSH').hide();
+                $("#password").attr('readonly','readonly');
+                //+_+++++++++++++++++++++++++++++这边还有一个药店就是要隐藏所有提示  还要还原最初的密码  确认密码的也都要充值
+                $('.providerAdd form div:eq(6) span:eq(2)').hide();//报错内容
+                $('.providerAdd form div:eq(6) span:eq(3)').hide();//✖图标
+                $('.providerAdd form div:eq(6) span:eq(4)').hide();//✔图标
+                $('.providerAdd form div:eq(8) span:eq(2)').hide();//报错内容  确认密码
+                $('.providerAdd form div:eq(8) span:eq(3)').hide();//✖图标
+                $('.providerAdd form div:eq(8) span:eq(4)').hide();//✔图标
+                $("#passwordConfirm").val("")
+            }
+        })
+
+
+        var reset = $("#reset");
+        reset.click(function () {
+            location.reload();
+        })
+
+        var oNick= $('#username');//姓名real1
+
+        //动态设置值
+        var aaa="123";
+        oNick.val(aaa);//'placeholder','aaaa'
+        oNick.keyup(function () {
+            var mspan = $('.providerAdd form div:eq(0) span:eq(2)');//报错内容
+            var mspan1 = $('.providerAdd form div:eq(0) span:eq(3)');//✖图标
+            var mspan2 = $('.providerAdd form div:eq(0) span:eq(4)');//✔图标
+            var str=oNick.val();
+
+            var pattern =  /^[\u4E00-\u9FA5A-Za-z]+$/;
+            if(pattern.test(str)){//匹配
+                mspan.hide();
+                mspan1.hide();
+                flag1=1;
+                mspan2.show();
+            }else {
+                mspan.show();
+                mspan1.show();
+                flag1=0;
+                mspan2.hide();
+                mspan.html("姓名格式不对");
+            }
+        });
+
+        //*************************************别忘了性别也要获取默认值*********************************************************
+
+        //这段注释是用户名  不让改了  到时候自动获取一下当前用户
+//        var oUser= $('#nickname');//用户名real2
+//        oUser.keyup(function () {
+//            var uname=oUser.val();
+//            var mspan = $('.container div form div:eq(4) span:eq(2)');//报错内容
+//            var mspan1 = $('.container div form div:eq(4) span:eq(3)');//✖图标
+//            var mspan2 = $('.container div form div:eq(4) span:eq(4)');//✔图标
+//            console.log(mspan.val());
+//            var StringError;
+//            var str=oUser.val();
+//            console.log(oUser.val());
+//            var pattern =  /^[a-zA-Z0-9_-]{4,16}$/;  //4-16为 字母数字下划线
+//    //                console.log("una:"+uname+"\n");
+//            if(pattern.test(str)){//匹配
+//                mspan.hide();
+//                mspan1.hide();
+//                flag5=1;
+//                mspan2.show();
+//                $.ajax({//如果用户格式正确 则发送ajax查询用户是否重复
+//                    //几个参数需要注意一下
+//                    type: "GET",//方法类型
+//                    dataType: "json",//预期服务器返回的数据类型
+//                    url: "/user/check" ,//url
+//                    data: {'uname':uname},
+//                    success: function (result) {
+//                        //console.log(result);//打印服务端返回的数据(调试用)
+//                        if(result.code=="可以使用"){
+//                            StringError=result.code;
+//                            console.log("返回的是否成功:"+result.code);
+//                            mspan.hide();
+//                            mspan1.hide();
+//                            flag5=1;
+//                            mspan2.show();
+//                        }else {
+//                            StringError=result.code;
+//                            console.log("返回注册失败的:"+result.code);
+//                            mspan.show();
+//                            mspan1.show();
+//                            mspan2.hide();
+//                            flag5=0;
+//                            mspan.html(StringError);
+//                        }
+//                    },
+//                    error : function() {
+//                        console.log("异常")
+//                    }
+//                });
+//            }else {
+//                mspan.show();
+//                mspan1.show();
+//                mspan2.hide();
+//                flag5=0;
+//                mspan.html("用户名格式不对");
+//            }
+//        });
+
+        var oPwd= $('#password');//密码输入real3
+        var pwdinput;
+        oPwd.keyup(function () {
+            var mspan = $('.providerAdd form div:eq(6) span:eq(2)');//报错内容
+            var mspan1 = $('.providerAdd form div:eq(6) span:eq(3)');//✖图标
+            var mspan2 = $('.providerAdd form div:eq(6) span:eq(4)');//✔图标
+            var str=oPwd.val();
+            console.log(oPwd.val());
+            var regex =/^[0-9a-zA-Z]{6,16}/;//密码必须由6-16个英文字母和数字的字符串组成！
+            if(!regex.test(str)){
+                console.log("错误")
+                mspan.show();
+                mspan1.show();
+                mspan2.hide();
+                flag2=0;
+                mspan.html("密码必须由6-16个英文字母和数字的字符串组成");
+                console.log("错误的信息:"+mspan.val());
+            }else {
+                console.log("正确")
+                mspan.hide();
+                mspan1.hide();
+                flag2=1;
+                mspan2.show();
+            }
+            pwdinput=str;
+        });
+
+        var oPwdCheck= $('#passwordConfirm');//确认密码输入real4  0   4   6    ./8  10  12  14 ..
+        oPwdCheck.keyup(function () {
+            var mspan = $('.providerAdd form div:eq(8) span:eq(2)');//报错内容
+            var mspan1 = $('.providerAdd form div:eq(8) span:eq(3)');//✖图标
+            var mspan2 = $('.providerAdd form div:eq(8) span:eq(4)');//✔图标
+            var str=oPwdCheck.val();
+            if(str!=pwdinput){//密码不匹配
+                mspan.show();
+                flag3=0;
+                mspan1.show();
+                mspan2.hide();
+                mspan.html("请再次确认你输入的密码");
+            }else {
+                mspan.hide();
+                flag3=1;
+                mspan1.hide();
+                mspan2.show();
+            }
+        });
+        var oPhone= $('#phoneNum');//手机输入
+        oPhone.keyup(function () {
+            var mspan = $('.providerAdd form div:eq(12) span:eq(2)');//报错内容
+            var mspan1 = $('.providerAdd form div:eq(12) span:eq(3)');//✖图标
+            var mspan2 = $('.providerAdd form div:eq(12) span:eq(4)');//✔图标
+            var str=oPhone.val();
+            //表示以1开头，第二位可能是3/4/5/7/8等的任意一个，在加上后面的\d表示数字[0-9]的9位，总共加起来11位结束。
+            if(!(/^1[34578]\d{9}$/.test(str))){
+                mspan.show();
+                mspan1.show();
+                mspan2.hide();
+                flag4=0;
+                mspan.html("请输入第一位为1，第二位为3/4/5/7/8,总长11位的数字号码");
+            }else {
+                flag4=1;
+                mspan.hide();
+                mspan1.hide();
+                mspan2.show();
+            }
+        });
+
+
+        var submitBtn =  $("#submit");
+
+
+        submitBtn.click(function (e) {
+            e.preventDefault();
+            console.log("1:"+flag1+",2:"+flag2+",3:"+flag3+",4:"+flag4);
+            if(flag1+flag2+flag3+flag4==4){//全部正确
+                console.log("调用ajax“/emp/update”的传值empid:"+empid.toString()+",name:"+oNick.val()+",sex"+$("#sex").val()
+                +"password:"+oPwd.val()+',servicebumber:'+oPhone.val()+",address:"+$('#address').val());
+                $.ajax({
+                    //几个参数需要注意一下
+                    type: "GET",//方法类型
+                    dataType: "json",//预期服务器返回的数据类型
+                    url: "/emp/update" ,//url
+                    data: {'empid':empid.toString(),'name':oNick.val(),'sex':$("#sex").val(),'password':oPwd.val(),'servicebumber':oPhone.val(),'address':$('#address').val()},
+                    success: function (result) {
+                        console.log(result);//打印服务端返回的数据(调试用)
+//                        window.location.href="empinfo.html"
+                        if(result.code=="00000"){
+                            window.location.href="empInfo.html";
+                        }else{
+                            alert("错误")
+                        }
+                    },
+                    error : function() {
+                        console.log("update接口 异常")
+                    }
+                })
+            }else {
+                console.log("没进去")
+            }
+        })
+    })
+    </script>
+</head>
+
+<body>
+<div class="left">
+    <div class="bigTitle">超市管理系统</div>
+    <div class="lines" >
+        <!-- class="active"  表示选中的列表项-->
+        <div onclick="pageClick(this,'empInfo.html')" class="active" title="empInfo.html"><img src="../../img/icon-1.png" />员工管理</div>
+        <div onclick="pageClick(this,'../../page/com/commodity.html')" title="commodity.html"><img src="../../img/icon-2.png" />商品信息管理</div>
+        <div onclick="pageClick(this,'../../page/com/comInventory.html')" title="comInventory.html"><img src="../../img/icon-3.png" />商品库存管理</div>
+        <div onclick="pageClick(this,'../../page/list/purchase.html')" title="purchase.html"><img src="../../img/icon-4.png" />进货订单管理</div>
+        <div onclick="pageClick(this,'../../page/com/comStockPurchase.html')" title="comStockPurchase.html"><img src="../../img/icon-5.png" />进货渠道管理</div>
+        <div onclick="pageClick(this,'../../page/list/order.html')" title="order.html"><img src="../../img/icon-5.png" />销售订单管理</div>
+        <div onclick="pageClick(this,'../../page/list/cashier.html')" title="cashier.html"><img src="../../img/icon-5.png" />收银台</div>
+    </div>
+</div>
+<div class="top" >
+    <div class="leftTiyle" id="flTitle">员工信息修改</div>
+    <div class="thisUser">当前用户：XXXXX</div>
+</div>
+<div id="content" >
+    <div class="publicMian ">
+        <div class="right">
+            <div class="providerAdd" style="width: 50%;margin: 0 auto;">
+                <form action="#" method="post">
+                    <div class="form-group has-feedback">
+                        <label for="username">姓名</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-user"></span></span>
+                            <input id="username" class="form-control"  maxlength="20" type="text">
+                        </div>
+
+                        <span style="color:red;display: none;" class="tips"></span>
+                        <span style="display: none;" class=" glyphicon glyphicon-remove form-control-feedback"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-ok form-control-feedback"></span>
+                    </div>
+
+                    <div class="form-group has-feedback">
+                        <label for="sex">性别</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-user"></span></span>
+                            <!--<input id="nickname" class="form-control" placeholder="请输入昵称" maxlength="20" type="text">-->
+                            <select id="sex" class="form-control">
+                                <option value ="男">男</option>
+                                <option value ="女">女</option>
+                            </select>
+                        </div>
+
+                        <!--<span style="color:red;display: none;" class="tips"></span>-->
+                        <!--<span style="display: none;" class=" glyphicon glyphicon-remove form-control-feedback"></span>-->
+                        <!--<span style="display: none;" class="glyphicon glyphicon-ok form-control-feedback"></span>-->
+                    </div>
+
+                    <div class="form-group has-feedback">
+                        <label for="nickname">用户名</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-user"></span></span>
+                            <input id="nickname" readonly="readonly" class="form-control" placeholder="请输入用户名" maxlength="20" type="text">
+                        </div>
+
+                        <span style="color:red;display: none;" class="tips"></span>
+                        <span style="display: none;" class=" glyphicon glyphicon-remove form-control-feedback"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-ok form-control-feedback"></span>
+                    </div>
+
+                    <div class="form-group has-feedback">
+                        <label for="password">密码</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></span>
+                            <input id="password" readonly="readonly" class="form-control" placeholder="请输入密码" maxlength="20" type="password">
+                        </div>
+                        <span style="color:red;display: none;" class="tips"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-remove form-control-feedback"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-ok form-control-feedback"></span>
+                    </div>
+
+                    <div id="pwdCheckSH" class="form-group has-feedback">
+                        <label for="passwordConfirm">确认密码</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></span>
+                            <input id="passwordConfirm" class="form-control" placeholder="请再次输入密码" maxlength="20" type="password">
+                        </div>
+                        <span style="color:red;display: none;" class="tips"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-remove form-control-feedback"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-ok form-control-feedback"></span>
+                    </div>
+                    <button type="button" id="updatePwd" class="btn btn-primary" autocomplete="off">更改密码</button>
+                    <br>
+
+                    <div class="form-group has-feedback">
+                        <label for="birthday">生日</label>
+                        <div class="input-group">
+                            <!--.glyphicon .glyphicon-gift-->
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-gift"></span></span>
+                            <input id="birthday" readonly="readonly" class="form-control" placeholder="请选择生日" maxlength="20" type="date">
+                        </div>
+
+                        <!--<span style="color:red;display: none;" class="tips"></span>-->
+                        <!--<span style="display: none;" class="glyphicon glyphicon-remove form-control-feedback"></span>-->
+                        <!--<span style="display: none;" class="glyphicon glyphicon-ok form-control-feedback"></span>-->
+                    </div>
+
+                    <div class="form-group has-feedback">
+                        <label for="phoneNum">手机号码</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-phone"></span></span>
+                            <input id="phoneNum" class="form-control" placeholder="请输入手机号码" maxlength="11" type="text">
+                        </div>
+                        <span style="color:red;display: none;" class="tips"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-remove form-control-feedback"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-ok form-control-feedback"></span>
+                    </div>
+
+
+                    <div class="form-group has-feedback">
+                        <label for="address">地址</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-home"></span></span>
+                            <input id="address" class="form-control" placeholder="请输入地址" maxlength="11" type="text">
+                        </div>
+                        <span style="color:red;display: none;" class="tips"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-remove form-control-feedback"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-ok form-control-feedback"></span>
+                    </div>
+
+
+
+                    <div class="form-group">
+                        <input class="form-control btn btn-primary" id="submit" value="修改" type="submit">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <input value="重置" id="reset" class="form-control btn btn-danger" type="reset">
+                        <input value="返回" onclick="backclick()" style="width: 90%;" id="back" class="form-control btn btn-danger" type="button">
+                    </div>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+</body>
+
+</html>

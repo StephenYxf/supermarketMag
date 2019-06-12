@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yxf.dao.EmployeeMapper" >
+  <resultMap id="BaseResultMap" type="com.yxf.model.Employee" >
+    <id column="empid" property="empid" jdbcType="VARCHAR" />
+    <result column="uname" property="uname" jdbcType="VARCHAR" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="sex" property="sex" jdbcType="VARCHAR" />
+    <result column="birthday" property="birthday" jdbcType="DATE" />
+    <result column="DateOfEntry" property="dateofentry" jdbcType="DATE" />
+    <result column="password" property="password" jdbcType="VARCHAR" />
+    <result column="type" property="type" jdbcType="INTEGER" />
+    <result column="service_number" property="serviceNumber" jdbcType="VARCHAR" />
+    <result column="address" property="address" jdbcType="VARCHAR" />
+    <result column="email" property="email" jdbcType="VARCHAR" />
+    <result column="remind" property="remind" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    empid, uname, name, sex, birthday, DateOfEntry, password, type, service_number as serviceNumber, address,
+    email, remind
+  </sql>
+
+  <sql id="simple_column_list">
+    empid, name, sex, email, service_number as serviceNumber, type
+  </sql>
+
+  <sql id="simple_column_listTwo">
+    name, sex, uname,password,birthday,service_number as serviceNumber, address
+  </sql>
+
+  <select id="idSerach" resultType="com.yxf.model.Employee">
+    SELECT
+    <include refid="simple_column_listTwo" />
+    FROM employee WHERE empid = #{0}
+  </select>
+
+  <select id="selectEmpInfo" resultType="com.yxf.model.Employee">
+    SELECT
+    <include refid="simple_column_list" />
+    FROM employee
+  </select>
+
+  <select id="serachEmpForUname" resultType="com.yxf.model.Employee">
+    SELECT
+    <include refid="simple_column_list" />
+    FROM employee WHERE name LIKE "%"#{0}"%"
+  </select>
+
+  <select id="selectPhone" resultType="com.yxf.model.Employee">
+    SELECT <include refid="Base_Column_List" />
+    FROM employee WHERE service_number = #{0}
+  </select>
+
+  <select id="loginselect" resultType="com.yxf.model.Employee">
+    SELECT *
+    FROM employee WHERE uname = #{0} AND password = #{1}
+  </select>
+
+  <select id="empidforuname" resultType="com.yxf.model.Employee">
+    SELECT uname,type
+    FROM employee WHERE empid = #{0}
+  </select>
+
+  <select id="unamefortype" resultType="com.yxf.model.Employee">
+    SELECT *
+    FROM employee WHERE uname = #{0}
+  </select>
+
+
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from employee
+    where empid = #{empid,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from employee
+    where empid = #{empid,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.yxf.model.Employee" >
+    insert into employee (empid, uname, name, 
+      sex, birthday, DateOfEntry, 
+      password, type, service_number, 
+      address, email, remind
+      )
+    values (#{empid,jdbcType=VARCHAR}, #{uname,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, 
+      #{sex,jdbcType=VARCHAR}, #{birthday,jdbcType=DATE}, #{dateofentry,jdbcType=DATE}, 
+      #{password,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, #{serviceNumber,jdbcType=VARCHAR}, 
+      #{address,jdbcType=VARCHAR}, #{email,jdbcType=VARCHAR}, #{remind,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.yxf.model.Employee" >
+    insert into employee
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="empid != null" >
+        empid,
+      </if>
+      <if test="uname != null" >
+        uname,
+      </if>
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="sex != null" >
+        sex,
+      </if>
+      <if test="birthday != null" >
+        birthday,
+      </if>
+      <if test="dateofentry != null" >
+        DateOfEntry,
+      </if>
+      <if test="password != null" >
+        password,
+      </if>
+      <if test="type != null" >
+        type,
+      </if>
+      <if test="serviceNumber != null" >
+        service_number,
+      </if>
+      <if test="address != null" >
+        address,
+      </if>
+      <if test="email != null" >
+        email,
+      </if>
+      <if test="remind != null" >
+        remind,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="empid != null" >
+        #{empid,jdbcType=VARCHAR},
+      </if>
+      <if test="uname != null" >
+        #{uname,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="sex != null" >
+        #{sex,jdbcType=VARCHAR},
+      </if>
+      <if test="birthday != null" >
+        #{birthday,jdbcType=DATE},
+      </if>
+      <if test="dateofentry != null" >
+        #{dateofentry,jdbcType=DATE},
+      </if>
+      <if test="password != null" >
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null" >
+        #{type,jdbcType=INTEGER},
+      </if>
+      <if test="serviceNumber != null" >
+        #{serviceNumber,jdbcType=VARCHAR},
+      </if>
+      <if test="address != null" >
+        #{address,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null" >
+        #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="remind != null" >
+        #{remind,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.yxf.model.Employee" >
+    update employee
+    <set >
+      <if test="uname != null" >
+        uname = #{uname,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null" >
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="sex != null" >
+        sex = #{sex,jdbcType=VARCHAR},
+      </if>
+      <if test="birthday != null" >
+        birthday = #{birthday,jdbcType=DATE},
+      </if>
+      <if test="dateofentry != null" >
+        DateOfEntry = #{dateofentry,jdbcType=DATE},
+      </if>
+      <if test="password != null" >
+        password = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null" >
+        type = #{type,jdbcType=INTEGER},
+      </if>
+      <if test="serviceNumber != null" >
+        service_number = #{serviceNumber,jdbcType=VARCHAR},
+      </if>
+      <if test="address != null" >
+        address = #{address,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null" >
+        email = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="remind != null" >
+        remind = #{remind,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where empid = #{empid,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.yxf.model.Employee" >
+    update employee
+    set uname = #{uname,jdbcType=VARCHAR},
+      name = #{name,jdbcType=VARCHAR},
+      sex = #{sex,jdbcType=VARCHAR},
+      birthday = #{birthday,jdbcType=DATE},
+      DateOfEntry = #{dateofentry,jdbcType=DATE},
+      password = #{password,jdbcType=VARCHAR},
+      type = #{type,jdbcType=INTEGER},
+      service_number = #{serviceNumber,jdbcType=VARCHAR},
+      address = #{address,jdbcType=VARCHAR},
+      email = #{email,jdbcType=VARCHAR},
+      remind = #{remind,jdbcType=VARCHAR}
+    where empid = #{empid,jdbcType=VARCHAR}
+  </update>
+</mapper>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>添加商品页面</title>
+    <link rel="stylesheet" href="../../css/index.css" />
+    <link rel="stylesheet" href="../../css/public.css"/>
+    <link rel="stylesheet" href="../../css/style.css"/>
+    <link rel="stylesheet" href="../../css/comPhoto.css"/>
+    <script type="text/javascript" src="../../js/jquery-3.3.1.min.js" ></script>
+    <link rel="stylesheet" href="../../css/bootstrap.min.css">
+    <script type="text/javascript" src="../../js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../js/getUrlParam.js"></script>
+    <script type="text/javascript" src="../../js/format.js"></script>
+
+
+    <link href="../../css/fileinput.min.css" rel="stylesheet" media="screen">
+    <script src="../../js/fileinput.min.js" type="text/javascript"></script>
+    <script src="../../js/locales/zh.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        function pageClick(k,url) {
+            $(location).attr('href', url);
+        }
+        function backclick() {
+            history.go(-1);
+        }
+
+        $(function () {
+            var loginName
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/emp/showName" ,//url
+//                data: {'uname':uname,'pwd':pwd,'email':email},
+                success: function (result) {
+                    //console.log(result);//打印服务端返回的数据(调试用)
+                    console.log(result.msg)
+                    if(result.msg=="99999"){//空的
+                        console.log("没有session内容uname")
+                    }
+                    loginName=result.msg;
+                    $(".thisUser").html("当前用户："+result.msg+"&nbsp;&nbsp;&nbsp;<a class='breakuser' href='../../login.html'>退出</a>");
+                },
+                error : function() {
+                    console.log("用户名获取接口 异常")
+                }
+            })
+
+
+            //页面跳转session检测
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/page/reload" ,//url
+//                data: {'uname':uname,'pwd':pwd,'email':email},
+                success: function (result) {
+                    //console.log(result);//打印服务端返回的数据(调试用)
+                    console.log(result.isEmp)
+                    if(result.isEmp=="true"){//空的
+                        console.log("判断没有session")
+                        window.location.href="../../../login.html";
+                    }
+                },
+                error : function() {
+                    console.log("页面跳转接口 异常")
+                }
+            })
+
+
+            $(".thisUser").on('click','.breakuser',function(){
+                $.ajax({
+                    //几个参数需要注意一下
+                    type: "GET",//方法类型
+                    dataType: "json",//预期服务器返回的数据类型
+                    url: "/emp/delSession" ,//url
+//                data: {'uname':uname,'pwd':pwd,'email':email},
+                    success: function (result) {
+                        //console.log(result);//打印服务端返回的数据(调试用)
+                        console.log(result.msg);
+                        window.location.href="../../../login.html"
+                    },
+                    error : function() {
+                        console.log("session删除 退出接口 异常")
+                    }
+                })
+            });
+
+
+
+
+
+            //初始化fileinput
+            var fileInput = new FileInput();
+            fileInput.Init("img", "/picture/upLoad");
+            $("#ghtx").click(function () {
+                $(".col-sm-9").empty();
+                var element='<input id="img" type="file" class="img" name="file" data-show-preview="true">';
+                $(".col-sm-9").append(element);
+                fileInput.Init("img", "/picture/upLoad");
+                $("#form-group").show();
+            })
+
+            //校验
+            var flag1=0,flag2=0,flag3=0;
+
+
+            var comprice= $('#comprice');//商品价格
+            comprice.keyup(function () {
+                var mspan = $('.form-group:eq(3) span:eq(2)');//报错内容
+                var mspan1 = $('.form-group:eq(3) span:eq(3)');//✖图标
+                var mspan2 = $('.form-group:eq(3) span:eq(4)');//✔图标
+                var reg = /(^[1-9]\d*(\.\d{1,2})?$)|(^0(\.\d{1,2})?$)/;
+                var str = $('#comprice').val();
+                console.log("这里是商品价格eq2:"+str);
+                if(reg.test(str)){//正确
+                    mspan.hide();
+                    mspan1.hide();
+                    mspan2.show();
+                    flag1=1;
+                }else{//错误
+                    mspan.show();
+                    mspan1.show();
+                    mspan2.hide();
+                    flag1=0;
+                    mspan.html("价格格式错误");
+                }
+                console.log(mspan.val());
+            });
+
+            var cominprice= $('#cominprice');//商品进价
+            cominprice.keyup(function () {
+                var mspan = $('.form-group:eq(4) span:eq(2)');//报错内容
+                var mspan1 = $('.form-group:eq(4) span:eq(3)');//✖图标
+                var mspan2 = $('.form-group:eq(4) span:eq(4)');//✔图标
+                var reg = /(^[1-9]\d*(\.\d{1,2})?$)|(^0(\.\d{1,2})?$)/;
+                var str = $('#cominprice').val();
+                console.log("这里是商品进价eq3:"+str);
+                if(reg.test(str)){//正确
+                    mspan.hide();
+                    mspan1.hide();
+                    mspan2.show();
+                    flag2=1;
+                }else{//错误
+                    mspan.show();
+                    mspan1.show();
+                    mspan2.hide();
+                    flag2=0;
+                    mspan.html("价格格式错误");
+                }
+            });
+
+
+            var suppliernumber= $('#suppliernumber');//供货商电话
+            suppliernumber.keyup(function () {
+                var mspan = $('.form-group:eq(6) span:eq(2)');//报错内容
+                var mspan1 = $('.form-group:eq(6) span:eq(3)');//✖图标
+                var mspan2 = $('.form-group:eq(6) span:eq(4)');//✔图标
+                var reg = /^1[34578]\d{9}$/;
+                var str = $('#suppliernumber').val();
+
+                console.log("这里是供货商电话eq5:"+str);
+                if(reg.test(str)){//正确
+                    mspan.hide();
+                    mspan1.hide();
+                    mspan2.show();
+                    flag3=1;
+                }else{//错误
+                    mspan.show();
+                    mspan1.show();
+                    mspan2.hide();
+                    flag3=0;
+                    mspan.html("请输入第一位为1，第二位为3/4/5/7/8,总长11位的数字号码");
+                }
+                console.log(mspan.val());
+            });
+            $("#submit").click(function (e) {
+                e.preventDefault();
+                var srcImg =$('#photoname').attr('src');
+                if(flag1+flag2+flag3==3){
+                    $.ajax({
+                        //几个参数需要注意一下
+                        type: "GET",//方法类型
+                        dataType: "json",//预期服务器返回的数据类型
+                        url: "/com/add" ,//url
+                        data: {'compicture':srcImg,'comname':$('#comname').val(),'comprice':comprice.val(),'cominprice':cominprice.val(),'suppliername':$('#suppliername').val(),"suppliernumber":$("#suppliernumber").val()},
+                        success: function (result) {
+                            console.log(result);//打印服务端返回的数据(调试用)
+//                        window.location.href="empinfo.html"
+                            if(result.code=="00000"){
+                                window.location.href="commodity.html";
+                            }else{
+                                alert(result.msg)
+                            }
+                        },
+                        error : function() {
+                            console.log("update接口 异常")
+                        }
+                    })
+                }else {
+                    alert("请完善信息后添加")
+                }
+            })
+
+        })
+
+        var FileInput = function() {
+            var oFile = new Object();
+
+            //初始化fileinput控件（第一次初始化）
+            oFile.Init = function(ctrlName, uploadUrl) {
+                var control = $('#' + ctrlName);
+                console.log("上传进来了吗")
+                //初始化上传控件的样式
+                control.fileinput({
+                    language: 'zh', //设置语言
+                    uploadUrl: uploadUrl, //上传的地址
+                    allowedFileExtensions: ['jpg', 'png', 'gif'], //接收的文件后缀
+                    uploadAsync: true, //默认异步上传
+                    showUpload: false, //是否显示上传按钮
+//                    showRemove: true, //显示移除按钮
+//                    showCaption: true, //是否显示标题
+//                    showPreview: true,
+                    dropZoneEnabled: true, //是否显示拖拽区域
+                    autoReplace:true,
+                    maxFileCount: 1, //表示允许同时上传的最大文件个数
+                    enctype: 'multipart/form-data',
+                    validateInitialCount:true,
+                    browseClass: "btn btn-primary", //按钮样式: btn-default、btn-primary、btn-danger、btn-info、btn-warning
+                    previewFileIcon: "<i class='glyphicon glyphicon-king'></i>",
+                    msgFilesTooMany: "选择上传的文件数量({n}) 超过允许的最大数值{m}！",
+                });
+                //异步上传返回结果处理
+
+                $('#img').on('fileerror', function(event, data, msg) {
+                    console.log("------------------");
+                    console.log("上传返回错误");
+                    console.log(data);
+                    console.log("------------------");
+                });
+                //异步上传返回结果处理
+
+                $("#img").on("fileuploaded", function (event, data, previewId, index) {
+                    console.log("------------------");
+                    console.log("上传返回成功");
+                    $("#form-group").hide();
+
+                    console.log(data);
+                    console.log("------------------");
+                });
+                //文件上传完成之后发生的事件
+                $("#img").on("fileuploaded", function(event, data, previewId, index) {
+                    console.log("路径:"+data.response.path);
+                    $(".photoinfo").attr("src", "../../"+data.response.path);
+                });
+
+                $('#img').on('filepreupload', function(event, data, previewId, index) {
+//                    var form = data.form, files = data.files, extra = data.extra,
+//                        response = data.response, reader = data.reader;
+                    console.log('File pre upload triggered');
+                });
+
+                //点击浏览框右上角X 清空文件前响应事件
+                $("#fileinput").on("fileclear",function(event, data, msg){
+                    //需要在这里设置头像更换操作。
+                });
+                $("#img").on("filecleared",function(event, data, msg){
+                    $("#form-group").hide();
+                });
+            }
+            return oFile; //这里必须返回oFile对象，否则FileInput组件初始化不成功
+        };
+
+        function imgreset() {
+            $("#photoname").attr("src","../../img/1.png")
+        }
+    </script>
+</head>
+
+<body>
+<div class="left">
+    <div class="bigTitle">超市管理系统</div>
+    <div class="lines" >
+        <!-- class="active"  表示选中的列表项-->
+        <div onclick="pageClick(this,'../../page/emp/empInfo.html')" title="empInfo.html"><img src="../../img/icon-1.png" />员工管理</div>
+        <div onclick="pageClick(this,'commodity.html')" class="active" title="commodity.html"><img src="../../img/icon-2.png" />商品信息管理</div>
+        <div onclick="pageClick(this,'comInventory.html')" title="comInventory.html"><img src="../../img/icon-3.png" />商品库存管理</div>
+        <div onclick="pageClick(this,'../../page/list/purchase.html')" title="purchase.html"><img src="../../img/icon-4.png" />进货订单管理</div>
+        <div onclick="pageClick(this,'comStockPurchase.html')" title="comStockPurchase.html"><img src="../../img/icon-5.png" />进货渠道管理</div>
+        <div onclick="pageClick(this,'../../page/list/order.html')" title="order.html"><img src="../../img/icon-5.png" />销售订单管理</div>
+        <div onclick="pageClick(this,'../../page/list/cashier.html')" title="cashier.html"><img src="../../img/icon-5.png" />收银台</div>
+    </div>
+</div>
+<div class="top" >
+    <div class="leftTiyle" id="flTitle">添加商品页面</div>
+    <div class="thisUser">当前用户：XXXXX</div>
+</div>
+<div id="content" >
+    <div class="publicMian ">
+        <div class="right">
+            <div class="providerAdd" style="width: 50%;margin: 0 auto;">
+                <form action="#" method="post">
+
+
+                    <div class="form-group has-feedback">
+                        <label for="photoname">商品图片</label>
+                        <div class="userPhoto" >
+                            <img id="photoname" class="photoinfo" src="../../img/1.png" style="text-align: center;">
+                        </div>
+                        <button id="ghtx" type="button" class="btn btn-primary">更换图片</button>
+                        <div class="form-group" id="form-group" style="display: none">
+                            <div class="col-sm-9">
+                                <input id="img" type="file" class="img" name="file" data-show-preview="true">
+                                <!--<input type="hidden" id="upfile-path" name="tbllecturer.JSh_ZhP"/>-->
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <br><br><br>
+
+                    <div class="form-group has-feedback">
+                        <label for="comname">商品名称</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-user"></span></span>
+                            <input id="comname"  class="form-control" placeholder="商品名称" maxlength="20" >
+                        </div>
+                        <span style="color:red;display: none;" class="tips"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-remove form-control-feedback"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-ok form-control-feedback"></span>
+                    </div>
+
+                    <div class="form-group has-feedback">
+                        <label for="comprice">商品价格</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></span>
+                            <input id="comprice" class="form-control" placeholder="商品价格" maxlength="20" >
+                        </div>
+                        <span style="color:red;display: none;" class="tips"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-remove form-control-feedback"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-ok form-control-feedback"></span>
+                    </div>
+
+                    <div class="form-group has-feedback">
+                        <label for="cominprice">商品进价</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></span>
+                            <input id="cominprice" class="form-control" placeholder="商品进价" maxlength="20" >
+                        </div>
+                        <span style="color:red;display: none;" class="tips"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-remove form-control-feedback"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-ok form-control-feedback"></span>
+                    </div>
+
+                    <div class="form-group has-feedback">
+                        <label for="suppliername">供货商名称</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-user"></span></span>
+                            <input id="suppliername" class="form-control" placeholder="供货商名称" maxlength="20">
+                        </div>
+                        <span style="color:red;display: none;" class="tips"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-remove form-control-feedback"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-ok form-control-feedback"></span>
+                    </div>
+
+                    <div class="form-group has-feedback">
+                        <label for="suppliernumber">供货商电话</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-phone-alt"></span></span>
+                            <input id="suppliernumber" class="form-control" placeholder="供货商电话" maxlength="11" maxlength="20" >
+                        </div>
+                        <span style="color:red;display: none;" class="tips"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-remove form-control-feedback"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-ok form-control-feedback"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <input class="form-control btn btn-primary" id="submit" value="添加" type="submit">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <input value="重置" id="reset" class="form-control btn btn-danger" type="reset" onclick="imgreset()">
+                        <input value="返回" onclick="backclick()" style="width: 90%;" id="back" class="form-control btn btn-danger" type="button">
+                    </div>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+</body>
+
+</html>

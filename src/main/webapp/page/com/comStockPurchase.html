@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>进货渠道管理页面</title>
+    <link rel="stylesheet" href="../../css/index.css" />
+    <link rel="stylesheet" href="../../css/public.css"/>
+    <link rel="stylesheet" href="../../css/tanchu.css"/>
+    <link rel="stylesheet" href="../../css/commoditytanchu.css"/>
+    <script type="text/javascript" src="../../js/jquery-3.3.1.min.js" ></script>
+    <link rel="stylesheet" href="../../css/bootstrap.css">
+    <script type="text/javascript" src="../../js/bootstrap-table.min.js"></script>
+    <link rel="stylesheet" href="../../css/bootstrap-table.min.css"/>
+    <script src="../../js/bootstrap-table-zh-CN.js"></script>
+    <!--<script type="text/javascript" src="../js/index.js" ></script>-->
+    <script type="text/javascript">
+        function jump(url) {
+            $("#content").load(url, function () {
+                    $("#content").fadeIn(100);
+                }
+            );
+        }
+        function pageClick(k,url) {
+//            $(k).parent().find("div").removeClass("active");
+//            $(k).addClass("active");
+//            $(".leftTiyle").text($(k).text());
+//            jump(url);
+            $(location).attr('href', url);
+        }
+
+        $(function () {
+            searchTable();//初始化table
+
+            $("#serachButton").bind("click", searchTable);
+
+
+            var loginName
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/emp/showName" ,//url
+//                data: {'uname':uname,'pwd':pwd,'email':email},
+                success: function (result) {
+                    //console.log(result);//打印服务端返回的数据(调试用)
+                    console.log(result.msg)
+                    if(result.msg=="99999"){//空的
+                        console.log("没有session内容uname")
+                    }
+                    loginName=result.msg;
+                    $(".thisUser").html("当前用户："+result.msg+"&nbsp;&nbsp;&nbsp;<a class='breakuser' href='../../login.html'>退出</a>");
+                },
+                error : function() {
+                    console.log("用户名获取接口 异常")
+                }
+            })
+
+
+            //页面跳转session检测
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/page/reload" ,//url
+//                data: {'uname':uname,'pwd':pwd,'email':email},
+                success: function (result) {
+                    //console.log(result);//打印服务端返回的数据(调试用)
+                    console.log(result.isEmp)
+                    if(result.isEmp=="true"){//空的
+                        console.log("判断没有session")
+                        window.location.href="../../../login.html";
+                    }
+                },
+                error : function() {
+                    console.log("页面跳转接口 异常")
+                }
+            })
+
+
+            $(".thisUser").on('click','.breakuser',function(){
+                $.ajax({
+                    //几个参数需要注意一下
+                    type: "GET",//方法类型
+                    dataType: "json",//预期服务器返回的数据类型
+                    url: "/emp/delSession" ,//url
+//                data: {'uname':uname,'pwd':pwd,'email':email},
+                    success: function (result) {
+                        //console.log(result);//打印服务端返回的数据(调试用)
+                        console.log(result.msg);
+                        window.location.href="../../../login.html"
+                    },
+                    error : function() {
+                        console.log("session删除 退出接口 异常")
+                    }
+                })
+            });
+
+
+            $("#providerTable").on("click", "a", function(event){
+                //初始值
+                var comid = $(this).closest("tr").find("td").eq(0).text();
+                var comna = $(this).closest("tr").find("td").eq(1).text();
+                var supid = $(this).closest("tr").find("td").eq(3).text();//就这个没有赋值
+                var inprice = $(this).closest("tr").find("td").eq(2).text();
+                var phone = $(this).closest("tr").find("td").eq(5).text();
+                var supname = $(this).closest("tr").find("td").eq(4).text();
+//                console.log("-----comid:"+comid+",supid:"+supid+",inprice:"+inprice+",phone:"+phone)
+                if($(this).attr("class")=="updCom"){//修改
+                    openDialog();
+                    $("#comna").val(comna);
+                    $("#comid").val(comid);
+                    $("#cominprice").val(inprice);
+                    $("#supliername").val(supname);
+                    $("#suplierPhone").val(phone);
+                    $("#supid").val(supid);
+                    $("#btnrest").click(function () {
+                        $("#cominprice").val(inprice);
+                        $("#supliername").val(supname);
+                        $("#suplierPhone").val(phone);
+                    })
+                }else if($(this).attr("class")=="delCom"){//删除
+                    //直接调用ajax删除对应数据
+                    $.ajax({
+                        //几个参数需要注意一下
+                        type: "GET",//方法类型
+                        dataType: "json",//预期服务器返回的数据类型
+                        url: "/comp/delCompSup" ,//url
+                        data: {'comid':comid,'supid':supid},
+                        success: function (result) {
+                            //console.log(result);//打印服务端返回的数据(调试用)
+                            console.log(result.msg);
+                            if(result.code="00000"){
+                                searchTable();
+                            }
+                        },
+                        error : function() {
+                            console.log("删除供货商接口 异常")
+                        }
+                    })
+                }
+
+            });
+
+
+
+        })
+
+        function subBtn() {
+            var comna = $("#comna").val();
+            var comid = $("#comid").val();
+            var inprice = $("#cominprice").val();
+            var supname = $("#supliername").val();
+            var phone = $("#suplierPhone").val();
+            var supid = $("#supid").val();
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/comp/subcomp" ,//url
+                data: {'comna':comna,'comid':comid,'inprice':inprice,'supname':supname,'phone':phone,'supid':supid},
+                success: function (result) {
+                    //console.log(result);//打印服务端返回的数据(调试用)
+                    console.log(result.msg);
+                    if(result.code="00000"){
+                        closeDialog();
+                        searchTable()
+                    }
+                },
+                error : function() {
+                    console.log("更新供货商接口 异常")
+                }
+            })
+        }
+
+        function searchTable() {
+//            $("#providerTable").bootstrapTable('destroy');
+            $("#providerTable").bootstrapTable('refresh');
+            $('#providerTable').bootstrapTable({
+                url: '/comp/info',//请求后台的URL（*）
+                method: 'post',//请求方式（*）
+                contentType:'application/x-www-form-urlencoded; charset=UTF-8',
+                dataType:"json",
+                striped: true,//是否显示行间隔色
+                cache: false,//是否使用缓存，默认为true，所以一般情况下需要设置一下这个属性（*）
+                pagination: true,//是否显示分页（*）
+                sidePagination: 'client',//分页方式：client客户端分页，server服务端分页（*）
+                pageNumber: 1,//初始化加载第一页，默认第一页
+                pageSize: 10,//每页的记录行数（*）
+                pageList: [5,10, 25],//可供选择的每页的行数（*）
+                queryParams:function (params) {
+                    var temp = {
+                        comna:$("#comname").val(),
+                        supna:$("#supname").val()
+                    };
+                    return temp//JSON.stringify(temp)
+                },
+                columns:[{
+                    field:"comid",
+                    title:"商品id",
+                    align:'center',
+                    valign:'middle'
+                },{
+                    field:"comname",
+                    title:"商品名称",
+                    align:'center',
+                    valign:'middle'
+                },{
+                    field:"inprice",
+                    title:"商品进价",
+                    align:'center',
+                    valign:'middle'
+                },{
+                    field:"supplierid",
+                    title:"供货商id",
+                    align:'center',
+                    valign:'middle'
+                },{
+                    field:"suppliername",
+                    title:"供货商名称",
+                    align:'center',
+                    valign:'middle'
+                    ,formatter: supidChangename
+                },{
+                    field:"supplierphone",
+                    title:"供货商电话",
+                    align:'center',
+                    valign:'middle'
+                    ,formatter: phoneChange
+                },{
+                    field:"operate",
+                    title:"操作",
+                    align:'center',
+                    valign:'middle',
+                    formatter: operateFormatter
+                }],
+                onLoadSuccess:function (json) {
+                    console.log("加载成功")
+                    console.log(json)
+                },onLoadError: function(){  //加载失败时执行
+                    console.log("加载数据失败");
+                }
+            });
+            function operateFormatter (value, row, index) {
+                var id = value;
+                var result = "";
+                result += "<a class=\"updCom\" href=\"javascript:void(0);\" ><img class='upd' src=\"../../img/xiugai.png\" alt=\"修改\" title=\"修改\"/></a>&nbsp;&nbsp;&nbsp;&nbsp;";
+                result += " <a href=\"#\" class=\"delCom\"><img class='del' src=\"../../img/schu.png\" alt=\"删除\" title=\"删除\"/></a>&nbsp;&nbsp;&nbsp;&nbsp;";
+                return result;
+
+
+            }
+            function phoneChange(value, row, index) {
+
+                var supid = row.supplierid;
+                var supPhone;
+                $.ajax({
+                    //几个参数需要注意一下
+                    type: "GET",//方法类型
+                    dataType: "json",//预期服务器返回的数据类型
+                    url: "/comp/idforname" ,//url
+                    async : false,//同步返回，这样就可以内部变量返回了
+                    data: {'supid':supid},
+                    success: function (result) {
+                        //console.log(result);//打印服务端返回的数据(调试用)
+//                        console.log(result.msg.suppliername);
+                        supPhone=result.msg.supplieridnumber//supplieridnumber  用的是前面的那个suppliernumber
+                    },
+                    error : function() {
+                        console.log("supid转换supname接口 异常")
+                    }
+                })
+                return supPhone;
+            }
+            function supidChangename(value, row, index) {
+                console.log("供货商名称转换进来=======")
+
+                var supid = row.supplierid;
+                var supname;
+                $.ajax({
+                    //几个参数需要注意一下
+                    type: "GET",//方法类型
+                    dataType: "json",//预期服务器返回的数据类型
+                    url: "/comp/idforname" ,//url
+                    async : false,//同步返回，这样就可以内部变量返回了
+                    data: {'supid':supid},
+                    success: function (result) {
+                        //console.log(result);//打印服务端返回的数据(调试用)
+//                        console.log(result.msg.suppliername);
+                        supname=result.msg.suppliername
+                    },
+                    error : function() {
+                        console.log("supid转换supname接口 异常")
+                    }
+                })
+                return supname;
+            }
+        }
+        function openDialog(){
+            document.getElementById('light').style.display='block';
+            document.getElementById('fade').style.display='block'
+        }
+
+
+        function closeDialog(){
+            document.getElementById('light').style.display='none';
+            document.getElementById('fade').style.display='none'
+        }
+
+        //只能数字小数点-
+        function onlyNumber(obj){
+
+            //得到第一个字符是否为负号
+            var t = obj.value.charAt(0);
+            //先把非数字的都替换掉，除了数字和.和-号
+            obj.value = obj.value.replace(/[^\d\.\-]/g,'');
+            //前两位不能是0加数字
+            obj.value = obj.value.replace(/^0\d[0-9]*/g,'');
+            //必须保证第一个为数字而不是.
+            obj.value = obj.value.replace(/^\./g,'');
+            //保证只有出现一个.而没有多个.
+            obj.value = obj.value.replace(/\.{2,}/g,'.');
+            //保证.只出现一次，而不能出现两次以上
+            obj.value = obj.value.replace('.','$#$').replace(/\./g,'').replace('$#$','.');
+            //如果第一位是负号，则允许添加
+            obj.value = obj.value.replace(/^(\-)*(\d+)\.(\d\d).*$/,'$1$2.$3');
+            if(t == '-'){ return; }
+
+        }
+
+        //添加供货关系按钮
+        function hrefClick() {
+            window.location.href="addComPrice.html";
+        }
+    </script>
+</head>
+
+<body>
+<div class="left">
+    <div class="bigTitle">超市管理系统</div>
+    <div class="lines" >
+        <!-- class="active"  表示选中的列表项-->
+        <div onclick="pageClick(this,'../../page/emp/empInfo.html')" title="empInfo.html"><img src="../../img/icon-1.png" />员工管理</div>
+        <div onclick="pageClick(this,'commodity.html')"title="commodity.html"><img src="../../img/icon-2.png" />商品信息管理</div>
+        <div onclick="pageClick(this,'comInventory.html')" title="comInventory.html"><img src="../../img/icon-3.png" />商品库存管理</div>
+        <div onclick="pageClick(this,'../../page/list/purchase.html')" title="purchase.html"><img src="../../img/icon-4.png" />进货订单管理</div>
+        <div onclick="pageClick(this,'comStockPurchase.html')" class="active"  title="comStockPurchase.html"><img src="../../img/icon-5.png" />进货渠道管理</div>
+        <div onclick="pageClick(this,'../../page/list/order.html')" title="order.html"><img src="../../img/icon-5.png" />销售订单管理</div>
+        <div onclick="pageClick(this,'../../page/list/cashier.html')" title="cashier.html"><img src="../../img/icon-5.png" />收银台</div>
+    </div>
+</div>
+<div class="top" >
+    <div class="leftTiyle" id="flTitle">进货渠道管理</div>
+    <div class="thisUser">当前用户：XXXXX</div>
+</div>
+
+<div id="light" class="white_content">
+    <div class="main-div">
+        <div class="backg">
+            <div class="info">
+                <div class="username"><!--商品名称-->
+                    <span class="glyphicon glyphicon-user"></span> 商&nbsp;&nbsp;品&nbsp;&nbsp;名&nbsp;&nbsp;称
+                    <input id="comna" disabled="disabled" class="userinput" type="text" placeholder="请输入商品名称"><br>
+                </div>
+                <div class="username"><!--商品id-->
+                    <span class="glyphicon glyphicon-edit"></span> 商&nbsp;&nbsp;品&nbsp;&nbsp;&nbsp;&nbsp;I&nbsp;&nbsp;&nbsp;&nbsp;D
+                    <input id="comid" class="userinput" disabled="disabled" type="text" placeholder="请输入商品ID"><br>
+                </div>
+                <div class="username"><!--商品进价-->
+                    <span class="glyphicon glyphicon-edit"></span> 商&nbsp;&nbsp;品&nbsp;&nbsp;进&nbsp;&nbsp;价
+                    <input id="cominprice" class="userinput" type="text" placeholder="请输入价格" onkeyup="onlyNumber(this)"><br>
+                </div>
+                <div class="username"><!--供货商名称-->
+                    <span class="glyphicon glyphicon-edit"></span> 供&nbsp;应&nbsp;商&nbsp;名&nbsp;称
+                    <input id="supliername" class="userinput" type="text" placeholder=""><br>
+                </div>
+                <div class="username"><!--供货商id-->
+                    <span class="glyphicon glyphicon-edit"></span> 供&nbsp;&nbsp;货&nbsp;&nbsp;商&nbsp;&nbsp;I&nbsp;&nbsp;D
+                    <input id="supid" class="userinput" disabled="disabled" type="text" placeholder="请输入供货商ID"><br>
+                </div>
+                <div class="username"><!--供货商电话-->
+                    <span class="glyphicon glyphicon-edit"></span> 供&nbsp;应&nbsp;商&nbsp;电&nbsp;话
+                    <input id="suplierPhone" class="userinput" type="text" oninput = "value=value.replace(/[^\d]/g,'')" placeholder="" maxlength="11"><br>
+                    <span style="color:red;display: none;" class="tips"></span>
+
+                </div>
+            </div>
+            <div class="buttonsn">
+                <div class="btnrig">
+                    <button class="btn btn-primary" onclick = "subBtn()">提交</button>
+                    <button class="btn btn-primary" onclick = "closeDialog()">取消</button>
+                    <button id="btnrest" class="btn btn-primary">重置</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+<!--遮罩层-->
+<div id="fade" class="black_overlay"></div>
+
+<div id="content" >
+    <div class="publicMian">
+        <div class="right">
+            <div class="search">
+                <span>搜索栏：</span>
+                <input id="comname" type="text" placeholder="请输入商品名称"/>
+                <input id="supname" type="text" placeholder="请输入供货商名称"/>
+                <!--<div class="mt40" style="width: 300px;">-->
+                <!--<div class="c-datepicker-date-editor  J-datepicker-range-day mt10">-->
+                <!--<i class="c-datepicker-range__icon kxiconfont icon-clock"></i>-->
+                <!--<input id="startdate" placeholder="开始日期" name="" class="c-datepicker-data-input only-date" value="">-->
+                <!--<span  class="c-datepicker-range-separator">-</span>-->
+                <!--<input id="enddate" placeholder="结束日期" name="" class="c-datepicker-data-input only-date" value="">-->
+                <!--</div>-->
+                <!--</div>-->
+
+
+                <input id="serachButton" type="button" value="查询"/>
+                <a class="regUrl" href="javascript:;" onclick="hrefClick()">添加供货</a>
+            </div>
+            <!--用户-->
+            <table id="providerTable" class="table table-bordered" >
+
+                <thead>
+                <tr class="firstTr">
+                    <th width="10%">商品id</th>
+                    <th width="15%">商品名称</th>
+                    <th width="10%">商品进价</th>
+                    <th width="20%">供货商id</th>
+                    <th width="20%">供货商名称</th>
+                    <th width="15%">供货商电话</th>
+                    <th width="10%">操作</th>
+                </tr>
+                </thead>
+
+
+            </table>
+
+        </div>
+    </div>
+</div>
+
+
+</body>
+
+</html>

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>商品库存管理页面</title>
+    <link rel="stylesheet" href="../../css/index.css" />
+    <link rel="stylesheet" href="../../css/public.css"/>
+    <!--<link rel="stylesheet" href="../../css/jquery.page.css">-->
+    <link rel="stylesheet" href="../../css/bootstrap.css">
+    <link rel="stylesheet" href="../../css/page.css">
+    <link rel="stylesheet" href="../../css/tanchu.css">
+    <link rel="stylesheet" href="../../css/commoditytanchu.css">
+    <link rel="stylesheet" href="../../css/bootstrap-table.min.css"/>
+    <link rel="stylesheet" href="../../css/jquery.fancybox-1.3.4.css">
+    <script type="text/javascript" src="../../js/jquery-3.3.1.min.js" ></script>
+    <script type="text/javascript" src="../../js/jquery.page.js" ></script>
+    <script type="text/javascript" src="../../js/jquery.fancybox-1.3.4.js"></script>
+
+    <script type="text/javascript" src="../../js/bootstrap-table.min.js"></script>
+    <script src="../../js/bootstrap-table-zh-CN.js"></script>
+    <!--<script type="text/javascript" src="../js/index.js" ></script>-->
+    <script type="text/javascript">
+
+        function pageClick(k,url) {
+            $(location).attr('href', url);
+        }
+
+        //==================
+
+        function getCertificateInfo(){
+
+            $(".tcdPageCode").remove();
+            $("#certificateContent").append('<div class="tcdPageCode" hidden=""></div>');
+            var objs;
+            var pageNo=1;     //加载第一页
+            var pageCount=initCertificate(pageNo);
+
+            $(".tcdPageCode").createPage({
+                pageCount: pageCount,
+                current: pageNo,
+                backFn: function (p) {
+                    pageNo=p;
+                    initCertificate(pageNo);
+                }
+            });
+        }
+
+
+        //加载图片
+        function initCertificate(pageNo){
+            $("#imgArea").html("");       //清空上一次加载得图片
+            var pageCount;       //总页数
+            $.ajax({
+                cache: true,
+                async: false,
+                type: "POST",
+                dataType: "json",
+                url: "/com/picturepage",//请求的action路径
+                data:{
+                    pageSize:6,
+                    pageNumber:pageNo
+                },
+                error: function () {
+                    console.log("请求失败");
+                },
+                success:function(data){
+                    if(data.rows.length>0){
+                        $(".tcdPageCode").show();
+                        pageCount=data.pageCount;       //总页数
+                        var $ul=$("#imgArea");
+                        $.each(data.rows, function(index, element) {   //此处li标签中的a标签是为了点击图片，显示大图所用，不需要放大图片的，去掉a标签，直接加入img标签即可 "http://localhost:8080/"+value.substring(6)
+                            var picPath=element.compicture
+//                            console.log("index:"+index+",pic:"+picPath)
+                            var str =  $('<div class="allImgList"><li><img src="' + picPath + '"></li><div class="imgTitle"><b>商品名称:</b><span class="spanid">'+element.comname+"</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class=\"redfont\">库存:"+element.comnum+'</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button  class="btn btn-primary" onclick="incom(this)">进货</button></div></div>');
+                            str.appendTo($ul);
+                        });
+                        $ul.appendTo($("#certificateContent"));
+                    }
+                }
+            });
+            return pageCount;
+        }
+        //==================
+        $(function () {
+
+            var loginName
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/emp/showName" ,//url
+//                data: {'uname':uname,'pwd':pwd,'email':email},
+                success: function (result) {
+                    //console.log(result);//打印服务端返回的数据(调试用)
+                    console.log(result.msg)
+                    if(result.msg=="99999"){//空的
+                        console.log("没有session内容uname")
+                    }
+                    loginName=result.msg;
+                    $(".thisUser").html("当前用户："+result.msg+"&nbsp;&nbsp;&nbsp;<a class='breakuser' href='../../login.html'>退出</a>");
+                },
+                error : function() {
+                    console.log("用户名获取接口 异常")
+                }
+            })
+
+
+            //页面跳转session检测
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/page/reload" ,//url
+//                data: {'uname':uname,'pwd':pwd,'email':email},
+                success: function (result) {
+                    //console.log(result);//打印服务端返回的数据(调试用)
+                    console.log(result.isEmp)
+                    if(result.isEmp=="true"){//空的
+                        console.log("判断没有session")
+                        window.location.href="../../../login.html";
+                    }
+                },
+                error : function() {
+                    console.log("页面跳转接口 异常")
+                }
+            })
+
+
+            $(".thisUser").on('click','.breakuser',function(){
+                $.ajax({
+                    //几个参数需要注意一下
+                    type: "GET",//方法类型
+                    dataType: "json",//预期服务器返回的数据类型
+                    url: "/emp/delSession" ,//url
+//                data: {'uname':uname,'pwd':pwd,'email':email},
+                    success: function (result) {
+                        //console.log(result);//打印服务端返回的数据(调试用)
+                        console.log(result.msg);
+                        window.location.href="../../../login.html"
+                    },
+                    error : function() {
+                        console.log("session删除 退出接口 异常")
+                    }
+                })
+            });
+
+
+            $('.fancybox').fancybox({ preload: 0 });
+            //=====================================================
+            getCertificateInfo();
+            //=====================================================
+//            $(".btn.btn-primary")
+//            $(".btn.btn-primary").each(function () {
+//                $(this).click(function () {
+//                    console.log($(this).siblings(".spanid").html())
+//                })
+//            })
+//            $("imgTitle").on("click",'button',function(){
+//                console.log($(this).siblings(".spanid").html());
+//            })
+
+
+
+
+
+        })
+        function changeFunc() {
+            var supname = $("#ghs  option:selected").text();//选中值
+            var comname = $("#comname").val();
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/comp/getghxorder" ,//url
+                data: {'supname':supname,'comname':comname},
+                success: function (result) {
+                    //console.log(result);//打印服务端返回的数据(调试用)
+                    console.log(result.msg)
+                    $("#cominprice").val(result.msg.inprice);
+                },
+                error : function() {
+                    console.log("getghxorder接口 异常")
+                }
+            })
+
+        }
+
+        function incom(obj) {
+            console.log($(obj).siblings(".spanid").html());
+            var comname = $(obj).siblings(".spanid").html()
+            var comnum = $(obj).siblings(".redfont").html()
+            $("#nownum").val(comnum);
+            $("#comname").val(comname);
+            console.log("incom:"+$("#comname").val(comname))
+            openDialog();
+            $("#ghs").find("option").remove();
+            $("#cominprice").val("");
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/comp/getghx" ,//url
+                data: {'comname':comname},
+                success: function (result) {
+                    //console.log(result);//打印服务端返回的数据(调试用)
+                    console.log(result.msg)
+                    var array = result.msg
+                    console.log(array[0].supplierid)
+                    for (var i=0;i<array.length;i++){
+                        $("#ghs").append("<option value='/"+array[i].supplierid+"/'>"+array[i].supplierid+"</option>");
+                    }
+                    changeFunc()
+//                    $("#ghs").append("<option value='/"+1+"/'>"+1+"</option>");
+                },
+                error : function() {
+                    console.log("getghx接口 异常")
+                }
+            })
+
+        }
+        function openDialog(){
+            document.getElementById('light').style.display='block';
+            document.getElementById('fade').style.display='block'
+
+        }
+
+
+        function closeDialog(){
+            document.getElementById('light').style.display='none';
+            document.getElementById('fade').style.display='none'
+        }
+
+        function subBtn() {
+            var supname = $("#ghs option:selected").text();
+            var comname = $("#comname").val()
+            var cominprice = $("#cominprice").val()
+            var innum = $("#comnum").val()
+//            console.log(supname+','+comname+','+cominprice+','+innum)
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/comp/incom" ,//url
+                data: {'supname':supname,'comname':comname,'cominprice':cominprice,'innum':innum},
+                success: function (result) {
+                    //console.log(result);//打印服务端返回的数据(调试用)
+                    console.log(result.msg)
+                    if(result.code=="00000"){
+
+                        //订单提交成功  增加库存
+                        $.ajax({
+                            //几个参数需要注意一下
+                            type: "GET",//方法类型
+                            dataType: "json",//预期服务器返回的数据类型
+                            url: "/com/addnum" ,//url
+                            data: {'innum':innum,'comname':comname},
+                            success: function (result) {
+                                //console.log(result);//打印服务端返回的数据(调试用)
+                                console.log("订单提交接口:"+result.msg)
+
+                            },
+                            error : function() {
+                                console.log("订单提交接口 异常")
+                            }
+                        })
+                        alert("订单提交成功，将自动跳转“进货订单管理”界面!")
+                        window.location.href="../list/purchase.html"
+                        closeDialog();
+                    }else{
+                        alert(result.msg)
+                    }
+                },
+                error : function() {
+                    console.log("进货接口 异常")
+                }
+            })
+        }
+    </script>
+</head>
+
+<body>
+<div class="left">
+    <div class="bigTitle">超市管理系统</div>
+    <div class="lines" >
+        <!-- class="active"  表示选中的列表项-->
+        <div onclick="pageClick(this,'../../page/emp/empInfo.html')" title="empInfo.html"><img src="../../img/icon-1.png" />员工管理</div>
+        <div onclick="pageClick(this,'commodity.html')"  title="commodity.html"><img src="../../img/icon-2.png" />商品信息管理</div>
+        <div onclick="pageClick(this,'comInventory.html')" class="active" title="comInventory.html"><img src="../../img/icon-3.png" />商品库存管理</div>
+        <div onclick="pageClick(this,'../../page/list/purchase.html')" title="purchase.html"><img src="../../img/icon-4.png" />进货订单管理</div>
+        <div onclick="pageClick(this,'comStockPurchase.html')" title="comStockPurchase.html"><img src="../../img/icon-5.png" />进货渠道管理</div>
+        <div onclick="pageClick(this,'../../page/list/order.html')" title="order.html"><img src="../../img/icon-5.png" />销售订单管理</div>
+        <div onclick="pageClick(this,'../../page/list/cashier.html')" title="cashier.html"><img src="../../img/icon-5.png" />收银台</div>
+    </div>
+</div>
+<div class="top" >
+    <div class="leftTiyle" id="flTitle">商品库存管理</div>
+    <div class="thisUser">当前用户：XXXXX</div>
+</div>
+<!--弹出框  修改商品信息界面-->
+<div id="light" class="white_content">
+    <div class="main-div">
+        <div class="backg">
+            <div class="info">
+                <div class="username"><!--商品名称-->
+                    <span class="glyphicon glyphicon-user"></span> 商&nbsp;&nbsp;品&nbsp;&nbsp;名&nbsp;&nbsp;称
+                    <input id="comname" class="userinput" disabled="disabled" type="text" placeholder="商品名称"><br>
+                </div>
+                <div class="username"><!--当前库存-->
+                    <span class="glyphicon glyphicon-edit"></span> 当&nbsp;&nbsp;前&nbsp;&nbsp;库&nbsp;&nbsp;存
+                    <input id="nownum" class="userinput" disabled="disabled" type="text" placeholder="商品库存"><br>
+
+                </div>
+                <br>
+                <div class="username"><!--供应商-->
+                    &nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-edit"></span>供&nbsp;&nbsp;&nbsp;应&nbsp;&nbsp;&nbsp;商
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<select  id="ghs" style="width:200px;" onchange="changeFunc()">
+                            <option value ="请选择">请选择</option>
+
+                        </select>
+                </div>
+                <div class="username"><!--进价-->
+                    <span class="glyphicon glyphicon-edit"></span> 进&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;价
+                    <input id="cominprice" class="userinput" disabled="disabled" type="text" placeholder=""><br>
+
+                </div>
+                <div class="username"><!--进货数量-->
+                    <span class="glyphicon glyphicon-edit"></span> 进&nbsp;&nbsp;货&nbsp;&nbsp;数&nbsp;&nbsp;量
+                    <input id="comnum" class="userinput"  type="text" placeholder="" oninput="value=value.replace(/[^\d]/g,'')"><br>
+
+                </div>
+            </div>
+            <div class="buttonsn">
+                <div class="btnrig">
+                    <button class="btn btn-primary" onclick = "subBtn()">提交</button>
+                    <button class="btn btn-primary" onclick = "closeDialog()">取消</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+<!--遮罩层-->
+<div id="fade" class="black_overlay"></div>
+
+<div id="content" >
+    <div id="certificateContent" class="list-main">
+        <ul id="imgArea" class="list-img"></ul>
+    </div>
+    <!--<div class="publicMian">-->
+        <!--<div class="right">-->
+            <!--<div class="search">-->
+                <!--<span>商品名称：</span>-->
+                <!--<input id="comserach" type="text" placeholder="请输入商品名称"/>-->
+                <!--<input id="serachButton" type="button" value="查询"/>-->
+                <!--<a class="addcom" href="javascript:;" onclick="hrefClick()">&nbsp;&nbsp;&nbsp;进货</a>-->
+            <!--</div>-->
+            <!--&lt;!&ndash;用户&ndash;&gt;-->
+            <!--<table id="providerTable" class="table table-bordered" >-->
+
+                <!--<thead>-->
+                <!--<tr class="firstTr">-->
+                    <!--<th width="25%">商品图片</th>-->
+                    <!--<th width="10%">商品id</th>-->
+                    <!--<th width="25%">商品名称</th>-->
+                    <!--<th width="20%">商品库存</th>-->
+                    <!--<th width="20%">操作</th>-->
+                <!--</tr>-->
+                <!--</thead>-->
+
+
+            <!--</table>-->
+
+        <!--</div>-->
+    <!--</div>-->
+</div>
+
+
+</body>
+
+</html>

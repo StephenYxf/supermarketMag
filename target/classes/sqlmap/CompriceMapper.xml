@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yxf.dao.CompriceMapper" >
+  <resultMap id="BaseResultMap" type="com.yxf.model.Comprice" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="comid" property="comid" jdbcType="VARCHAR" />
+    <result column="comname" property="comname" jdbcType="VARCHAR" />
+    <result column="inprice" property="inprice" jdbcType="REAL" />
+    <result column="supplierid" property="supplierid" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, comid, comname, inprice, supplierid
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from comprice
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+
+  <!--进货渠道专用sel-->
+  <select id="comnameinfo" resultType="com.yxf.model.Comprice">
+    SELECT *
+    FROM comprice WHERE comname LIKE #{0}
+  </select>
+
+  <select id="supinfo" resultType="com.yxf.model.Comprice">
+    SELECT *
+    FROM comprice WHERE supplierid in (SELECT supplierid FROM supplier WHERE suppliername LIKE #{0})
+  </select>
+
+  <select id="comnamesupinfo" resultType="com.yxf.model.Comprice">
+    SELECT *
+    FROM comprice WHERE supplierid in (SELECT supplierid FROM supplier WHERE suppliername LIKE #{0}) and comname LIKE #{1}
+  </select>
+
+  <!---->
+
+  <select id="selectBycomname" resultType="com.yxf.model.Comprice">
+    SELECT *
+    FROM comprice WHERE comname = #{0}
+  </select>
+
+  <select id="selectAllinfo" resultType="com.yxf.model.Comprice">
+    SELECT *
+    FROM comprice
+  </select>
+
+  <select id="selectBysupid" resultType="com.yxf.model.Comprice">
+    SELECT *
+    FROM comprice WHERE supplierid = #{0}
+  </select>
+
+  <select id="selectBynamesid" resultType="com.yxf.model.Comprice">
+    SELECT *
+    FROM comprice WHERE comname = #{0} and supplierid = #{1}
+  </select>
+
+  <select id="selectBynamesna" resultType="com.yxf.model.Comprice">
+    SELECT *
+    FROM comprice WHERE comname = #{0} and supplierid = #{1}
+  </select>
+
+  <delete id="deleteBycomId" parameterType="java.lang.String" >
+    delete from comprice
+    where comid = #{comid,jdbcType=VARCHAR} and supplierid=#{supplierid,jdbcType=VARCHAR}
+  </delete>
+
+  <delete id="deletecompriceid" parameterType="java.lang.String" >
+    delete from comprice
+    where comid = #{comid,jdbcType=VARCHAR}
+  </delete>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from comprice
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.yxf.model.Comprice" >
+    insert into comprice (id, comid, comname, 
+      inprice, supplierid)
+    values (#{id,jdbcType=INTEGER}, #{comid,jdbcType=VARCHAR}, #{comname,jdbcType=VARCHAR}, 
+      #{inprice,jdbcType=REAL}, #{supplierid,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.yxf.model.Comprice" >
+    insert into comprice
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="comid != null" >
+        comid,
+      </if>
+      <if test="comname != null" >
+        comname,
+      </if>
+      <if test="inprice != null" >
+        inprice,
+      </if>
+      <if test="supplierid != null" >
+        supplierid,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="comid != null" >
+        #{comid,jdbcType=VARCHAR},
+      </if>
+      <if test="comname != null" >
+        #{comname,jdbcType=VARCHAR},
+      </if>
+      <if test="inprice != null" >
+        #{inprice,jdbcType=REAL},
+      </if>
+      <if test="supplierid != null" >
+        #{supplierid,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+
+  <update id="updateComprice" parameterType="com.yxf.model.Comprice">
+    UPDATE comprice
+    <set >
+      <if test="comid != null" >
+        comid = #{comid,jdbcType=VARCHAR},
+      </if>
+      <if test="comname != null" >
+        comname = #{comname,jdbcType=VARCHAR},
+      </if>
+      <if test="inprice != null" >
+        inprice = #{inprice,jdbcType=REAL},
+      </if>
+      <if test="supplierid != null" >
+        supplierid = #{supplierid,jdbcType=VARCHAR},
+      </if>
+    </set>
+    WHERE comid = #{comid,jdbcType=VARCHAR}
+  </update>
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.yxf.model.Comprice" >
+    update comprice
+    <set >
+      <if test="comid != null" >
+        comid = #{comid,jdbcType=VARCHAR},
+      </if>
+      <if test="comname != null" >
+        comname = #{comname,jdbcType=VARCHAR},
+      </if>
+      <if test="inprice != null" >
+        inprice = #{inprice,jdbcType=REAL},
+      </if>
+      <if test="supplierid != null" >
+        supplierid = #{supplierid,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.yxf.model.Comprice" >
+    update comprice
+    set comid = #{comid,jdbcType=VARCHAR},
+      comname = #{comname,jdbcType=VARCHAR},
+      inprice = #{inprice,jdbcType=REAL},
+      supplierid = #{supplierid,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>添加供货关系页面</title>
+    <link rel="stylesheet" href="../../css/index.css" />
+    <link rel="stylesheet" href="../../css/public.css"/>
+    <link rel="stylesheet" href="../../css/style.css"/>
+    <link rel="stylesheet" href="../../css/comPhoto.css"/>
+    <script type="text/javascript" src="../../js/jquery-3.3.1.min.js" ></script>
+    <link rel="stylesheet" href="../../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../css/bootstrap-select.min.css">
+    <script type="text/javascript" src="../../js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../js/getUrlParam.js"></script>
+    <script type="text/javascript" src="../../js/format.js"></script>
+    <script type="text/javascript" src="../../js/bootstrap-select.min.js"></script>
+    <script type="text/javascript" src="../../js/vue.js"></script>
+
+    <link href="../../css/fileinput.min.css" rel="stylesheet" media="screen">
+    <script src="../../js/fileinput.min.js" type="text/javascript"></script>
+    <script src="../../js/locales/zh.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        function pageClick(k,url) {
+            $(location).attr('href', url);
+        }
+        function backclick() {
+            window.location.href="comStockPurchase.html";
+        }
+
+        $(function () {
+            //下拉框加载商品名称
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                async : false,//同步返回，这样就可以内部变量返回了
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/com/comnameinfo" ,//url
+                success: function (result) {
+                    //console.log(result);//打印服务端返回的数据(调试用)
+                    console.log(result.msg)
+                    var array = result.msg
+                    console.log(array[0].comname)
+                    for (var i=0;i<array.length;i++){
+                        $("#comnaselect").append("<option value='/"+array[i].comname+"/'>"+array[i].comname+"</option>");
+                    }
+                    $("#comprice").val(array[0].comprice);
+                },
+                error : function() {
+                    console.log("/com/comnameinfo接口 异常")
+                }
+            })
+
+            //加载供货商下拉菜单
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                async : false,//同步返回，这样就可以内部变量返回了
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/com/supinfo" ,//url
+                success: function (result) {
+                    //console.log(result);//打印服务端返回的数据(调试用)
+
+                    console.log(result.msg)
+                    var array = result.msg
+                    console.log(array[0].supplieridnumber)
+                    for (var i=0;i<array.length;i++){
+                        $("#supnaselect").append("<option value='/"+array[i].suppliername+"/'>"+array[i].suppliername+"</option>");
+                    }
+                    $("#suppliernumber").val(array[0].supplieridnumber);
+                },
+                error : function() {
+                    console.log("/com/supinfo接口 异常")
+                }
+            })
+
+
+            $("#comnaselect").change(function(){
+                $.ajax({
+                    //几个参数需要注意一下
+                    type: "GET",//方法类型
+                    dataType: "json",//预期服务器返回的数据类型
+                    url: "/com/comnaSearch" ,//url
+                    data: {'comna':$("#comnaselect option:selected").text()},
+                    success: function (result) {
+                        //console.log(result);//打印服务端返回的数据(调试用)
+                        $("#comprice").val(result.msg.comprice);
+                    },
+                    error : function() {
+                        console.log("/com/comnaSearch接口 异常")
+                    }
+                })
+            })
+
+            $("#supnaselect").change(function(){
+                $.ajax({
+                    //几个参数需要注意一下
+                    type: "GET",//方法类型
+                    dataType: "json",//预期服务器返回的数据类型
+                    url: "/com/supnasearch" ,//url
+                    data: {'supna':$("#supnaselect option:selected").text()},
+                    success: function (result) {
+                        //console.log(result);//打印服务端返回的数据(调试用)
+                        console.log(result.msg)
+                        $("#suppliernumber").val(result.msg.supplieridnumber);
+                    },
+                    error : function() {
+                        console.log("/com/supnasearch接口 异常")
+                    }
+                })
+            })
+
+        var flag2=0,flag3=1;
+        var loginName
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/emp/showName" ,//url
+//                data: {'uname':uname,'pwd':pwd,'email':email},
+                success: function (result) {
+                    //console.log(result);//打印服务端返回的数据(调试用)
+                    console.log(result.msg)
+                    if(result.msg=="99999"){//空的
+                        console.log("没有session内容uname")
+                    }
+                    loginName=result.msg;
+                    $(".thisUser").html("当前用户："+result.msg+"&nbsp;&nbsp;&nbsp;<a class='breakuser' href='../../login.html'>退出</a>");
+                },
+                error : function() {
+                    console.log("用户名获取接口 异常")
+                }
+            })
+
+
+            //页面跳转session检测
+            $.ajax({
+                //几个参数需要注意一下
+                type: "GET",//方法类型
+                dataType: "json",//预期服务器返回的数据类型
+                url: "/page/reload" ,//url
+//                data: {'uname':uname,'pwd':pwd,'email':email},
+                success: function (result) {
+                    //console.log(result);//打印服务端返回的数据(调试用)
+                    console.log(result.isEmp)
+                    if(result.isEmp=="true"){//空的
+                        console.log("判断没有session")
+                        window.location.href="../../../login.html";
+                    }
+                },
+                error : function() {
+                    console.log("页面跳转接口 异常")
+                }
+            })
+
+
+            $(".thisUser").on('click','.breakuser',function(){
+                $.ajax({
+                    //几个参数需要注意一下
+                    type: "GET",//方法类型
+                    dataType: "json",//预期服务器返回的数据类型
+                    url: "/emp/delSession" ,//url
+//                data: {'uname':uname,'pwd':pwd,'email':email},
+                    success: function (result) {
+                        //console.log(result);//打印服务端返回的数据(调试用)
+                        console.log(result.msg);
+                        window.location.href="../../../login.html"
+                    },
+                    error : function() {
+                        console.log("session删除 退出接口 异常")
+                    }
+                })
+            });
+            var checkedvalue=2;
+            $(':radio').click(function(){
+                var value = $(this).val()  //获取选中的radio的值
+                if(value=='1'){
+                    $("#supnaselect").attr("disabled",true);
+                    $("#suppliername").removeAttr("disabled");
+                    $("#suppliernumber").val("");
+                    flag3=0;
+                    checkedvalue=1;
+                }else if(value=='2'){
+//                    $("#supnaselect").removeAttr("disabled");
+                    $("#supnaselect").attr("disabled",false);
+                    $("#suppliername").attr("disabled","disabled");
+                    flag3=1;
+                    $.ajax({
+                        //几个参数需要注意一下
+                        type: "GET",//方法类型
+                        dataType: "json",//预期服务器返回的数据类型
+                        url: "/com/supnasearch" ,//url
+                        data: {'supna':$("#supnaselect option:selected").text()},
+                        success: function (result) {
+                            //console.log(result);//打印服务端返回的数据(调试用)
+                            console.log(result.msg)
+                            $("#suppliernumber").val(result.msg.supplieridnumber);
+                        },
+                        error : function() {
+                            console.log("/com/supnasearch接口 异常")
+                        }
+                    })
+                    checkedvalue=2;
+                }
+            });
+
+            $("#reset").click(function () {
+                history.go(0)
+            })
+
+
+
+
+
+
+            var cominprice= $('#cominprice');//商品进价
+            cominprice.keyup(function () {
+                var mspan = $('.form-group:eq(2) span:eq(2)');//报错内容
+                var mspan1 = $('.form-group:eq(2) span:eq(3)');//✖图标
+                var mspan2 = $('.form-group:eq(2) span:eq(4)');//✔图标
+                var reg = /(^[1-9]\d*(\.\d{1,2})?$)|(^0(\.\d{1,2})?$)/;
+                var str = $('#cominprice').val();
+                console.log("这里是商品进价eq3:"+str);
+                if(reg.test(str)){//正确
+                    mspan.hide();
+                    mspan1.hide();
+                    mspan2.show();
+                    flag2=1;
+                }else{//错误
+                    mspan.show();
+                    mspan1.show();
+                    mspan2.hide();
+                    flag2=0;
+                    mspan.html("价格格式错误");
+                }
+            });
+
+
+            var suppliernumber= $('#suppliernumber');//供货商电话
+            suppliernumber.keyup(function () {
+                var mspan = $('.form-group:eq(5) span:eq(2)');//报错内容
+                var mspan1 = $('.form-group:eq(5) span:eq(3)');//✖图标
+                var mspan2 = $('.form-group:eq(5) span:eq(4)');//✔图标
+                var reg = /^1[34578]\d{9}$/;
+                var str = $('#suppliernumber').val();
+
+                console.log("这里是供货商电话eq5:"+str);
+                if(reg.test(str)){//正确
+                    mspan.hide();
+                    mspan1.hide();
+                    mspan2.show();
+                    flag3=1;
+                }else{//错误
+                    mspan.show();
+                    mspan1.show();
+                    mspan2.hide();
+                    flag3=0;
+                    mspan.html("请输入第一位为1，第二位为3/4/5/7/8,总长11位的数字号码");
+                }
+                console.log(mspan.val());
+            });
+            $("#submit").click(function (e) {
+                e.preventDefault();
+                if ($(".radio1").attr("checked")) {
+                    //自己输入
+                }else if($(".radio2").attr("checked")){
+                    //下拉框选择
+                }
+                console.log("r2:"+$(".radio2").is(':checked')+",r1:"+$(".radio1").is(':checked'))
+                if(flag2+flag3==2 && $(".radio2").is(':checked') ||  $("#suppliername").val()!="" && flag2+flag3==2 && $(".radio1").is(':checked')){
+
+                    $.ajax({
+                        //几个参数需要注意一下
+                        type: "GET",//方法类型
+                        dataType: "json",//预期服务器返回的数据类型
+                        url: "/comp/addcomprice" ,//url
+                        data: {'comna':$('#comnaselect option:selected').text(),'cominprice':$("#cominprice").val(),'checkedvalue':checkedvalue,
+                            'suppliername':$('#suppliername').val(),"supnaselect":$('#supnaselect option:selected').text(),'supphone':$("#suppliernumber").val()},
+                        success: function (result) {
+                            console.log(result);//打印服务端返回的数据(调试用)
+                            if(result.code=="00000"){
+                                window.location.href="comStockPurchase.html";
+                            }else{
+                                alert(result.msg)
+                            }
+                        },
+                        error : function() {
+                            console.log("添加供货关系接口 异常")
+                        }
+                    })
+                }else {
+                    alert("请更正信息后添加："+flag2+","+flag3)
+                }
+            })
+
+        })
+
+        //只能数字小数点-
+        function onlyNumber(obj){
+
+            //得到第一个字符是否为负号
+            var t = obj.value.charAt(0);
+            //先把非数字的都替换掉，除了数字和.和-号
+            obj.value = obj.value.replace(/[^\d\.\-]/g,'');
+            //前两位不能是0加数字
+            obj.value = obj.value.replace(/^0\d[0-9]*/g,'');
+            //必须保证第一个为数字而不是.
+            obj.value = obj.value.replace(/^\./g,'');
+            //保证只有出现一个.而没有多个.
+            obj.value = obj.value.replace(/\.{2,}/g,'.');
+            //保证.只出现一次，而不能出现两次以上
+            obj.value = obj.value.replace('.','$#$').replace(/\./g,'').replace('$#$','.');
+            //如果第一位是负号，则允许添加
+            obj.value = obj.value.replace(/^(\-)*(\d+)\.(\d\d).*$/,'$1$2.$3');
+            if(t == '-'){ return; }
+
+        }
+
+
+    </script>
+</head>
+
+<body>
+<div class="left">
+    <div class="bigTitle">超市管理系统</div>
+    <div class="lines" >
+        <!-- class="active"  表示选中的列表项-->
+        <div onclick="pageClick(this,'../../page/emp/empInfo.html')" title="empInfo.html"><img src="../../img/icon-1.png" />员工管理</div>
+        <div onclick="pageClick(this,'commodity.html')" title="commodity.html"><img src="../../img/icon-2.png" />商品信息管理</div>
+        <div onclick="pageClick(this,'comInventory.html')" title="comInventory.html"><img src="../../img/icon-3.png" />商品库存管理</div>
+        <div onclick="pageClick(this,'../../page/list/purchase.html')" title="purchase.html"><img src="../../img/icon-4.png" />进货订单管理</div>
+        <div onclick="pageClick(this,'comStockPurchase.html')" class="active" title="comStockPurchase.html"><img src="../../img/icon-5.png" />进货渠道管理</div>
+        <div onclick="pageClick(this,'../../page/list/order.html')" title="order.html"><img src="../../img/icon-5.png" />销售订单管理</div>
+        <div onclick="pageClick(this,'../../page/list/cashier.html')" title="cashier.html"><img src="../../img/icon-5.png" />收银台</div>
+    </div>
+</div>
+<div class="top" >
+    <div class="leftTiyle" id="flTitle">添加供货关系页面</div>
+    <div class="thisUser">当前用户：XXXXX</div>
+</div>
+<div id="content" >
+    <div class="publicMian ">
+        <div class="right">
+            <div class="providerAdd" style="width: 50%;margin: 0 auto;">
+                <form action="#" method="post">
+
+                    <br><br><br>
+
+                    <div class="form-group has-feedback">
+                        <label >商品名称</label>
+                        <br>
+                        <select id="comnaselect" class="selectpicker">
+                        </select>
+                    </div>
+
+                    <div class="form-group has-feedback">
+                        <label for="comprice">商品价格</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></span>
+                            <input id="comprice" disabled class="form-control" placeholder="商品价格" maxlength="20" >
+                        </div>
+                    </div>
+
+                    <div class="form-group has-feedback">
+                        <label for="cominprice">商品进价</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></span>
+                            <input id="cominprice" class="form-control"  placeholder="商品进价" maxlength="20" >
+                        </div>
+                        <span style="color:red;display: none;" class="tips"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-remove form-control-feedback"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-ok form-control-feedback"></span>
+                    </div>
+
+                    <div class="form-group has-feedback">
+                        <label for="suppliername">供货商名称--自填</label>
+                        <input class="radio1" name="selsupn" type="radio" value="1" />
+                        <div class="input-group">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-user"></span></span>
+                            <input id="suppliername" disabled="disabled" class="form-control" placeholder="供货商名称" maxlength="20">
+                        </div>
+                        <br>
+                    </div>
+                    <div class="form-group has-feedback">
+                        <label>供货商名称--自选</label>
+                        <input class="radio2" name="selsupn" type="radio" value="2" checked />
+                        <br>
+                        <select id="supnaselect" class="selectpicker">
+                        </select>
+                    </div>
+
+                    <div class="form-group has-feedback">
+                        <label for="suppliernumber">供货商电话</label>
+                        <div class="input-group">
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-phone-alt"></span></span>
+                            <input id="suppliernumber" class="form-control" placeholder="供货商电话" maxlength="11" maxlength="20" >
+                        </div>
+                        <span style="color:red;display: none;" class="tips"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-remove form-control-feedback"></span>
+                        <span style="display: none;" class="glyphicon glyphicon-ok form-control-feedback"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <input class="form-control btn btn-primary" id="submit" value="添加" type="submit">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <input value="重置" id="reset" class="form-control btn btn-danger" type="reset">
+                        <input value="返回" onclick="backclick()" style="width: 90%;" id="back" class="form-control btn btn-danger" type="button">
+                    </div>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+</body>
+
+</html>
